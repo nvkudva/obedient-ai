@@ -42,6 +42,9 @@ This combination is the core differentiator. The posts should feel like they com
 - **Imperfect and human** — occasional short fragments. A sentence that starts mid-thought. Not everything needs to be a complete grammatical sentence. Reads like a smart person thinking out loud, not a press release.
 - **No excessive metaphors** — one strong observation beats three clever analogies
 - **Grounded specificity** — real tools, real numbers, real constraints
+- **Vary your rhythm** — mix short sentences with long ones. Create a natural, musical flow in the paragraph. Add a sharp, short sentence after a long one for emphasis.
+- **Cut the fluff** — delete any word that adds no real meaning. Make every sentence do hard work for the story. Simplify until the core truth stands clear.
+- **No model tells** — avoid phrases commonly produced by Claude or any frontier model.
 
 ---
 
