@@ -1,17 +1,12 @@
 ---
 name: linkedin-post
 description: >
-  Craft LinkedIn posts in Vijay's personal writing style — first person, urgent
-  and direct tone, plain language with no jargon. Written from the perspective of
-  an Engineering Director who is a visionary, data-driven, and deeply hands-on in
-  AI and engineering. Use this skill any time the user wants to write, draft,
-  refine, or improve a LinkedIn post. Trigger on phrases like "LinkedIn post",
-  "write a post", "draft a post", "post for LinkedIn", "help me write", or when
-  the user shares a rough idea or bullet points and wants it turned into a post.
+  Craft LinkedIn posts in Vijay's personal writing style — first person, urgent and direct tone, plain language with no jargon. Written from the perspective of
+  an Engineering Director who is a visionary, data-driven, and deeply hands-on in AI and engineering. 
+  Use this skill any time the user wants to write, draft, refine, or improve a LinkedIn post. Trigger on phrases like "LinkedIn post", "write a post", "draft a post", "post for LinkedIn", "help me write", or when the user shares a rough idea or bullet points and wants it turned into a post.
   Always use this skill even if the request is casual or vague, as long as
   LinkedIn or a professional post is implied.
 ---
-
 # LinkedIn Post Skill
 
 ## The persona
@@ -26,19 +21,19 @@ Every post comes from a single, consistent voice: **an Engineering Director with
 This combination is the core differentiator. The posts should feel like they come from someone who can both architect a system and write a three-year organisational strategy — and who does both regularly.
 
 **What this means in practice:**
+
 - When writing about AI tools, include the constraint or tradeoff (VRAM limits, cost of cloud vs local, token rate limits) — not just the hype
 - When writing about leadership, draw on real team dynamics and real decisions, not generic advice
 - When writing about the future, anchor the vision to something that already exists in prototype form today
-- Numbers and specifics beat adjectives: "42x solar growth" beats "massive growth", "23,000 repos affected" beats "widespread impact"
 
 ---
 
 ## Core style principles
 
 - **First person** — always "I", written from lived experience and direct observation
-- **Urgent and direct** — no hedging, no softening; say the thing plainly
-- **Plain language** — no jargon, no buzzwords, no corporate fluff
-- **Concise and linear** — one clear thread from start to finish; no tangents
+- **Direct** — say the thing plainly. Not the same as absolute: qualifying an observation you genuinely hold loosely ("seems to be settling on", "I think the answer is", "Not perfect but works") is honest, not weak. Hedge the claim, never the sentence.
+- **Plain language** — no *corporate* buzzwords or consultant fluff. Technical specifics are the opposite of jargon here: tps, VRAM, MoE, 27B, MTPLX variants all belong in. Name the thing precisely.
+- **One thread** — a single argument from start to finish. A short aside is fine ("Btw", "Oh wait, there's more") as long as it returns to the thread.
 - **Imperfect and human** — occasional short fragments. A sentence that starts mid-thought. Not everything needs to be a complete grammatical sentence. Reads like a smart person thinking out loud, not a press release.
 - **No excessive metaphors** — one strong observation beats three clever analogies
 - **Grounded specificity** — real tools, real numbers, real constraints
@@ -50,25 +45,34 @@ This combination is the core differentiator. The posts should feel like they com
 
 ## Post structure
 
-Follow this arc naturally — don't label sections, just flow:
+The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook → what I did → closing line and stops. Never label the sections.
 
 1. **Hook** — a sharp, direct opening that earns the scroll stop. Often a single sentence. Can be a contradiction, a counterintuitive observation, or a blunt statement of something most people dance around.
 2. **The problem or reset** — what's broken, changing, or misunderstood. Establish why this matters right now.
 3. **The insight or action** — what the director-with-hands-on-experience has actually learned or done. This is where data, specifics, and personal experience go.
 4. **Implication for leaders or builders** — what this means for teams, organisations, or how people should work differently. Operational, not abstract.
-5. **Closing punch** — one strong sentence. Lands the message. Stays with the reader. Does NOT ask a question.
+5. **Closing line** — a flat, blunt statement, sometimes self-deprecating ("Well I'm tired of testing all these models, yet I still end up downloading one more as soon as it lands"). It does not build to a crescendo and it does not ask a rhetorical question.
 
 ---
 
 ## Length
 
-150–250 words. Long enough to earn credibility, short enough to respect attention. Never pad. If the idea is tight, keep the post tight.
+Max 200 words. Long enough to earn credibility, short enough to respect attention. Never pad. If the idea is tight, keep the post tight.
+
+If the material genuinely needs more than 200 words, don't stretch the post — say so and offer to split it into two posts or a blog.
+
+---
+
+## Links
+
+When the post references tools, repos, or models, put the URLs at the bottom under a plain `Links` label — after the body, before the hashtags. One per line, prefixed with the name. Skip the label when there is only one link.
 
 ---
 
 ## Hashtags
 
 End every post with exactly **3 hashtags**. They must be:
+
 - Specific to the actual topic of the post
 - Reflecting the real theme, tool, industry, or concept discussed
 - Useful for discovery by the right audience — not generic filler
@@ -82,11 +86,11 @@ Bad: `#Leadership #Innovation #AI` (too broad, signal nothing)
 
 Every post should feel like it sits at the intersection of three things:
 
-| Dimension | What it sounds like |
-|---|---|
-| **Visionary** | "The browser was built for humans. AI agents don't care about your UX." |
+| Dimension             | What it sounds like                                                      |
+| --------------------- | ------------------------------------------------------------------------ |
+| **Visionary**   | "The browser was built for humans. AI agents don't care about your UX."  |
 | **Data-driven** | "After 6 months, average users dictate 72% of their characters with it." |
-| **Hands-on** | "I ran Qwen 30B locally on the Mac — here's where it actually breaks." |
+| **Hands-on**    | "I ran Qwen 30B locally on the Mac — here's where it actually breaks."  |
 
 A post that's only visionary reads like a pundit. Only data-driven reads like a report. Only hands-on reads like a tutorial. The goal is all three, even if one dominates in any given post.
 
@@ -94,19 +98,22 @@ A post that's only visionary reads like a pundit. Only data-driven reads like a 
 
 ## What to avoid
 
-- Lists, bullet points, or headers inside the post body
+- Headers inside the post body
+- Bulleted lists — but a **numbered** list is right when the post is a setup, a ranked recommendation, or a comparison. Prose is the default; a numbered list is the exception that has to earn its place.
+- Lots of single line paragraphs. Feels claude generated a common pattern.
 - Rhetorical questions as the closing line
 - AI writing clichés: "In today's world...", "It's no secret that...", "Let's be honest...", "Here's what most people miss...", "Game changer", "Paradigm shift", "Unlock", "The future is...", "Dive deep"
 - Framing every post as if it's breaking news — the voice is considered and experienced, not breathless
 - Over-explanation — trust the reader to be smart
-- Generic closing questions like "What do you think?" or "Agree?" — the post should land on its own
-- Phrases that sound like AI wrote them: "It's worth noting that...", "This is a real shift", "genuinely", "not just a..."
+- Generic engagement bait: "What do you think?", "Agree?", "Thoughts?". A genuine ask is different and allowed — "Let me know if you have a better setup, I would love to try it out" is a real request, not a bid for comments.
+- Phrases that sound like AI wrote them: "It's worth noting that...", "This is a real shift", "It's not just X, it's Y", "Here's the thing"
 
 ---
 
 ## Refining a draft
 
 When the user provides a rough draft:
+
 - Stay close to their original structure and ideas
 - Fix flow and clarity without rewriting the voice
 - Don't expand what they wrote — if concise, stay concise
@@ -119,6 +126,7 @@ When the user provides a rough draft:
 ## Writing from scratch
 
 When given a topic or bullet points:
+
 - Ask one focused clarifying question only if the angle is genuinely unclear
 - Otherwise, write the draft directly and offer to adjust
 - Default to first person, specific, direct — anchor in something real or observed
@@ -128,68 +136,94 @@ When given a topic or bullet points:
 
 ## Example outputs
 
-### Example 1 — Hands-on + data-driven (tool take)
+These are real posts. Match this voice.
 
-**Topic:** Voice-to-text for AI prompting
+### Example 1 — Hands-on tool take
 
-> Speaking my prompts instead of typing them changed something for me.
+**Topic:** Local coding setup
+
+> My new local coding setup: OMLX + Ornith 1.0 35B + Claude Code
 >
-> The tool that finally made it click: Wispr Flow. Indian startup, just raised $81M, and it's the best voice-to-text I've tried. After 6 months, their average user dictates 72% of their characters with it.
+> In this token economy, running local models at optimal token speed is one of the most exciting pieces of tech right now. That, and the coding harness tools that come with it.
 >
-> But the speed isn't the point.
+> Every time there's a new model, a new fine-tuned version, a new tool to run it — I can't wait to get my hands on it and check the token speed and real world usability. With so many new models and tools it can be very exhausting too.
 >
-> When you type, you edit as you think. The keyboard filters your thoughts before they come out. When you speak, thoughts arrive more raw, more complete. Your prompts become more conversational — and that's actually what gets better output from AI.
+> My go-to setup used to be LM Studio + Qwen 3.6 + Claude Code. After playing around with a lot of combinations, here's where I landed as of today.
 >
-> The keyboard has had a 150-year run.
+> 1. OMLX for Mac's native MXL server gives more than a 55% bump (60 tps vs 95 tps on my M3 Max).
+> 2. Ornith 1.0, a fine-tune over Qwen 3.5, benchmarks better on coding than even Qwen 3.6, and it actually works. (Pick the MTPLX variant.)
+> 3. Harness matters. Claude Code worked best. (Pi is fast, but simplest — OpenCode and VS Code Copilot Chat hold their own too).
 >
-> The next interface is already here.
+> Making the right choices with LLMs takes a lot of grinding these days. But once you do, your same hardware gets better output quality at higher speed. That's what turns a barely-usable setup into a very usable one.
 >
-> #VoiceAI #WisprFlow #FutureOfWork
+> Let me know if you have a better setup, I would love to try it out.
+>
+> #LocalLLM #OMLX #AIEngineering
 
 ---
 
 ### Example 2 — Visionary + leadership
 
-**Topic:** AI forcing a reset in engineering leadership
+**Topic:** Coding harnesses as an operating model
 
-> The frameworks, playbooks, and scaling strategies we've accumulated as engineering leaders were built for a world that no longer exists.
+> Harness is how we should be reimagining every future app — not just coding tools.
 >
-> AI isn't just a new tool. It's a change in the physics of building.
+> Coding harnesses are one of the best technological advances I've seen. They show exactly how to take non-deterministic LLMs and combine them with deterministic code to build something genuinely useful. That's the core idea: controlling a system that isn't always correct until it becomes reliable enough to depend on.
 >
-> One engineer with the right AI fluency can do what a team used to do. Process overhead matters less when iteration is 10x faster. The bottleneck moved from execution to vision and judgment.
+> We've solved this problem before, actually. Humans have never been deterministic. We don't always listen. We don't always execute the plan. And yet we built policies, processes, and incentives — a system, evolved over decades — that turns unreliable individual output into an organization that works.
 >
-> That demands real unlearning — not just "add AI to the workflow."
+> That's the same philosophy the agentic world needs.
 >
-> Leaders need to get their hands dirty with these tools. Not to become engineers again, but to develop real judgment about what AI can and can't do. You can't lead an AI-augmented team while guessing at the technology's actual capabilities.
+> The harness isn't a coding trick. It's the operating model for anything built on a non-deterministic engine — human or AI. Every future application, not just IDEs and copilots, will need its own version of this: guardrails, checkpoints, incentives, and process wrapped around an unpredictable core.
 >
-> Getting on the AI bandwagon without that understanding gives no real advantage.
+> We already know how to do this. We've been doing it with people for a long time.
 >
-> The learning is not optional anymore.
->
-> #HandsOnAILeader #EngineeringManagement #TechLeadership
+> #AgenticAI #EngineeringLeadership #AIHarness
 
 ---
 
 ### Example 3 — Data-driven + specific constraint
 
-**Topic:** Local LLMs for coding
+**Topic:** The sweet spot for local models
 
-> Been testing local LLMs for coding seriously. Unfiltered take:
+> The tech world seems to be settling on 27B–35B LLMs as the sweet spot for local models - solid accuracy yet small enough to run on local dev machines. Being around 20GB means it can run locally on most 32gb macbooks and older rtx 3090s.
 >
-> Qwen and Nemotron are the best options right now — fast token generation, solid code completion. But there's a constraint everyone dances around:
+> Within just last few weeks we've seen Gemma 4, Muse Glimmer, KAT-Coder, and the much-awaited upcoming Qwen 3.8 27B and more.
 >
-> VRAM is the hard ceiling. Full stop.
+> Btw, here is the surprise - KAT-Coder V2.5 Dev is on top right now, claimed benchmarks beat even upcoming Qwen 3.8 27b!
 >
-> 7B models: 8GB VRAM. 14B: 16GB. 32B+: workstation or Mac. Your M3 with 32GB unified memory runs a 30B model that a same-spec Windows machine simply can't touch.
+> Well I'm tired of testing all these models locally, yet I still end up downloading one more as soon as it lands.
 >
-> The gap from cloud is still real — Claude Sonnet runs at 100B+ parameters. But for autocomplete and quick questions where you'd rather not send code to the cloud? Local is already worth it.
->
-> Hybrid is the right answer. The tooling to auto-switch doesn't exist yet.
->
-> When it does, the calculation changes entirely.
->
-> #LocalLLM #CodingTools #AIEngineering
+> #LocalLLM #OpenWeightModels #AIEngineering
 
 ---
 
-Notice across all three: specific numbers, a real constraint or tradeoff, first-person authority, no lists, closing line that lands without asking for engagement. That is the target.
+### Example 4 — Personal observation, non-AI
+
+**Topic:** 3D printing as a household appliance
+
+> Bought a 3D printer months ago. My son was more excited than me — I was printing his toys, Hot Wheels attachments. Nice hobby, I thought.
+>
+> Then I moved houses. Suddenly I was printing organizers, shelves, hooks, planters, lamps, kitchen utilities. Even after filament costs, I was saving real money over Amazon — no delivery time, no returns. My wife started printing her own stuff too, IKEA accessories!
+>
+> The printer stopped being a hobby project and started running nonstop, like an actual appliance.
+>
+> The sharpest use case came from being a techie who preorders gadgets early. The Samsung Fold 8 is about to launch. As leaks came out, I got my hands on its 3D model. Printed it, held it next to my Fold 7, and got a real feel for the form factor before spending money on the actual device.
+>
+> A 3D printer can be as standard a household appliance as a paper printer. The utility case is already there. What's missing isn't the technology. It's a shift in perspective, and nobody's marketing it that way yet.
+>
+> Home manufacturing isn't coming. It's already sitting on my desk!
+>
+> #3DPrinting #ConsumerTech #SmartHome
+
+---
+
+## What the real posts actually do
+
+Read against the examples above, not against generic LinkedIn advice:
+
+- **The examples run long.** They predate the 200-word cap. Match their voice, not their length — the cap wins.
+- **Opening with a question works** when the question is the actual thing the post answers.
+- **Parenthetical asides and mid-thought corrections stay in.** "Btw", "Oh wait", "Well I'm tired of..." — the voice is unpolished on purpose. Do not smooth this out.
+- **Specific names and numbers everywhere**: 55% bump, 60 vs 95 tps, M3 Max, 27B–35B, ₹2,000, 1,500+ tests. Never a vague adjective where a number exists.
+- **Closing line is a flat statement**, often slightly blunt or self-deprecating. It does not build to a crescendo.
