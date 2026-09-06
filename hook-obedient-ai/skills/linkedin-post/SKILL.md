@@ -43,6 +43,12 @@ This combination is the core differentiator. The posts should feel like they com
 
 ---
 
+## Lists
+
+Bullets and numbered lists are allowed in the post body. Use them when the content is genuinely a set — a setup, a ranked recommendation, a comparison, a list of options. Prose is still the default for an argument; don't fragment a single thread into bullets.
+
+---
+
 ## Post structure
 
 The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook → what I did → closing line and stops. Never label the sections.
@@ -51,7 +57,7 @@ The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook �
 2. **The problem or reset** — what's broken, changing, or misunderstood. Establish why this matters right now.
 3. **The insight or action** — what the director-with-hands-on-experience has actually learned or done. This is where data, specifics, and personal experience go.
 4. **Implication for leaders or builders** — what this means for teams, organisations, or how people should work differently. Operational, not abstract.
-5. **Closing line** — a flat, blunt statement, sometimes self-deprecating ("Well I'm tired of testing all these models, yet I still end up downloading one more as soon as it lands"). It does not build to a crescendo and it does not ask a rhetorical question.
+5. **Closing line** — one strong sentence that lands. Prefer something inspiring: a line that shifts how the reader sees the thing ("Home manufacturing isn't coming. It's already sitting on my desk!", "We already know how to do this. We've been doing it with people for a long time."). A flat or self-deprecating close works too when the post is a personal tool take. Never a rhetorical question.
 
 ---
 
@@ -101,7 +107,6 @@ A post that's only visionary reads like a pundit. Only data-driven reads like a 
 ## What to avoid
 
 - Headers inside the post body
-- Bulleted lists — but a **numbered** list is right when the post is a setup, a ranked recommendation, or a comparison. Prose is the default; a numbered list is the exception that has to earn its place.
 - Lots of single line paragraphs. Feels claude generated a common pattern.
 - Rhetorical questions as the closing line
 - AI writing clichés: "In today's world...", "It's no secret that...", "Let's be honest...", "Here's what most people miss...", "Game changer", "Paradigm shift", "Unlock", "The future is...", "Dive deep"
@@ -228,4 +233,4 @@ Read against the examples above, not against generic LinkedIn advice:
 - **Opening with a question works** when the question is the actual thing the post answers.
 - **Parenthetical asides and mid-thought corrections stay in.** "Btw", "Oh wait", "Well I'm tired of..." — the voice is unpolished on purpose. Do not smooth this out.
 - **Specific names and numbers everywhere**: 55% bump, 60 vs 95 tps, M3 Max, 27B–35B, ₹2,000, 1,500+ tests. Never a vague adjective where a number exists.
-- **Closing line is a flat statement**, often slightly blunt or self-deprecating. It does not build to a crescendo.
+- **Closing line is inspiring or blunt, never a question.** The strongest ones reframe the thing the post just described. Self-deprecating flat closes are the alternative, not the default.
