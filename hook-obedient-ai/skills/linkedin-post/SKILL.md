@@ -57,7 +57,7 @@ The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook �
 
 ## Length
 
-Max 200 words. Long enough to earn credibility, short enough to respect attention. Never pad. If the idea is tight, keep the post tight.
+Max 300 words. Long enough to earn credibility, short enough to respect attention. Never pad. If the idea is tight, keep the post tight.
 
 If the material genuinely needs more than 200 words, don't stretch the post — say so and offer to split it into two posts or a blog.
 
@@ -222,7 +222,7 @@ These are real posts. Match this voice.
 
 Read against the examples above, not against generic LinkedIn advice:
 
-- **The examples run long.** They predate the 200-word cap. Match their voice, not their length — the cap wins.
+- **Length varies with the idea.** The examples run 110 to 245 words. A single observation gets 110; a setup with a numbered list earns 245. Never stretch to fill.
 - **Opening with a question works** when the question is the actual thing the post answers.
 - **Parenthetical asides and mid-thought corrections stay in.** "Btw", "Oh wait", "Well I'm tired of..." — the voice is unpolished on purpose. Do not smooth this out.
 - **Specific names and numbers everywhere**: 55% bump, 60 vs 95 tps, M3 Max, 27B–35B, ₹2,000, 1,500+ tests. Never a vague adjective where a number exists.
