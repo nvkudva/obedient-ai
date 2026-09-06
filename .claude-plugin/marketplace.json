@@ -1,0 +1,13 @@
+{
+  "name": "obedient-ai",
+  "owner": {
+    "name": "nvkudva"
+  },
+  "plugins": [
+    {
+      "name": "hook-obedient-ai",
+      "source": "./hook-obedient-ai",
+      "description": "Injects standing response-length and working-style rules at session start."
+    }
+  ]
+}

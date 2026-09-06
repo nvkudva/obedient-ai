@@ -1,0 +1,6 @@
+{
+  "name": "hook-obedient-ai",
+  "version": "0.1.0",
+  "description": "SessionStart hook that loads standing rules (response length, working style, delegation, session hygiene) into every session.",
+  "hooks": "./hooks/hooks.json"
+}
