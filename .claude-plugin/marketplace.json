@@ -5,8 +5,8 @@
   },
   "plugins": [
     {
-      "name": "hook-obedient-ai",
-      "source": "./hook-obedient-ai",
+      "name": "obedient-ai",
+      "source": "./obedient-ai",
       "description": "Injects standing response-length and working-style rules at session start, and ships the linkedin-post skill."
     }
   ]

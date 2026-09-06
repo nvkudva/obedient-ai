@@ -1,6 +1,6 @@
 {
-  "name": "hook-obedient-ai",
+  "name": "obedient-ai",
   "displayName": "Obedient AI",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "SessionStart hook that loads standing rules (response length, working style, delegation, session hygiene) into every session, plus a linkedin-post skill for drafting posts in Vijay's voice."
 }
