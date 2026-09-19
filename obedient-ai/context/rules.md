@@ -24,7 +24,7 @@ Everything else is dropped, not appended.
 
 ## Working style
 
-- Answer directly. Report only: what changed, what broke, what's left.
+- Answer directly. Report only: what changed, what broke, what's left, always in short concise statements.
 - Don't re-read a file you already read this session unless you edited it.
 - Don't verify an edit by re-reading it — the edit tool already errors on failure.
 - Make the change I asked for. Don't add error handling, tests, docs, or
@@ -51,6 +51,20 @@ Everything else is dropped, not appended.
 - When exploring unfamiliar code, search for symbols and read call sites — don't
   read whole modules to build a picture.
 - Stop exploring the moment you can act. Don't build a complete mental model first.
+- Use `sg` (ast-grep) for structural code search and multi-file refactors; `rg` only
+  for plain text. `yq` for YAML/TOML, `duckdb` for CSV/JSON/parquet, `sd` for simple
+  find-and-replace.
+- Node package manager: follow the lockfile. `pnpm-lock.yaml` -> pnpm, `bun.lock` ->
+  bun, `package-lock.json` -> npm. Never mix managers in one repo. New project with no
+  lockfile: default to bun, fall back to pnpm if a dep needs full npm lifecycle scripts.
+
+## Destructive operations
+
+- Never `rm -rf`. Use `trash <path>` (macOS built-in, restorable via Finder Put Back).
+- `trash` exits 5 on a missing path where `rm -rf` exits 0. Guard chains:
+  `[ -e path ] && trash path`.
+- `trash` fails on SMB/NAS mounts. There, `mv` into a `.trash` dir on the same volume.
+- Plain `rm file` on a single known file is fine. The ban is on recursive deletes.
 
 ## Delegation
 
@@ -77,7 +91,7 @@ Everything else is dropped, not appended.
 ## PLAN.md and TODO.md
 
 - `PLAN.md` holds architecture, decisions, constraints, and rejected alternatives
-  with the reason. It never holds task state.
+  with the reason in concise statements. It never holds task state.
 - `TODO.md` is the only file tracking progress. Flat checklist, one line per task,
   pending on top. No prose, no nesting, no narrative.
 - Read each once at session start. Never re-read either in the same session.
