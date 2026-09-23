@@ -48,6 +48,6 @@ Before starting the user's task, ask this once with AskUserQuestion (options "Ye
 
 "These tools are not installed in your terminal: ${missing[*]}. Installing and using them could improve speed and results. Would you like to install them?"
 
-- Yes: run \`brew install ${formulae[*]}\`, then report the result in one line.
-- No: run \`mkdir -p "$(dirname "$DECLINED")" && printf '%s\n' ${missing[*]} >> "$DECLINED"\` so the user is never asked again.
+- Yes: run \`brew install ${formulae[*]}\`. Report the result in one line as its own paragraph, then a blank line, then a horizontal rule (---), then a blank line, then answer the user's message.
+- No: run \`mkdir -p "$(dirname "$DECLINED")" && printf '%s\n' ${missing[*]} >> "$DECLINED"\` so the user is never asked again. Then use the same blank line, ---, blank line separator before answering the user's message.
 EOF
