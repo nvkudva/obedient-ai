@@ -16,6 +16,11 @@
 # is an absolute path inside /tmp, /private/tmp (Claude's scratchpad) or
 # $TMPDIR. Pure bash (3.2+) plus one jq call.
 # Sourcing this file defines check_cmd without running the hook.
+#
+# Skipped in auto mode (permission_mode "auto"): Claude Code's auto mode
+# classifier covers the same actions and can tell when the user asked for them.
+# This guard is the backstop in manual, acceptEdits, dontAsk and
+# bypassPermissions modes.
 
 export LC_ALL=C
 nl=$'\n'
@@ -309,6 +314,9 @@ check_cmd() {
 [[ ${BASH_SOURCE[0]} != "$0" ]] && return 0
 
 IFS= read -r -d '' payload
+
+re_auto='"permission_mode"[[:space:]]*:[[:space:]]*"auto"'
+[[ $payload =~ $re_auto ]] && exit 0
 
 # Extract .tool_input.command — prefer jq, fall back to python3.
 if command -v jq >/dev/null 2>&1; then

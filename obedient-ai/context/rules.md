@@ -26,8 +26,8 @@ Findings I must act on go in a bulleted list, max one line per finding.
   `run_in_background` and wait with Monitor. Never poll in the foreground with
   `sleep`, `until` or `while` loops.
 - Delete directories with `trash <path>`. `rm -rf` only on absolute paths inside
-  /tmp, the scratchpad or `$TMPDIR`; a hook blocks other recursive rm and
-  history-destroying git commands.
+  /tmp, the scratchpad or `$TMPDIR`. No rebase, amend or history rewrite unless I
+  ask for it.
 
 ## Writing code
 
