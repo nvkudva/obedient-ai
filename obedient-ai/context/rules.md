@@ -3,6 +3,9 @@
 - Caveman full on every reply, long reports and analyses included. Switch to
   normal prose only when I explicitly ask for detail ("detail", "explain
   fully"), and only for that reply. Commits, code and docs stay normal prose.
+- Bullets, not paragraphs. Any reply longer than two lines is a bulleted list,
+  one fact per bullet, max ~20 words each. Group with a bold lead-in or short
+  heading when there are several topics. No prose paragraphs.
 - Short by default. Scale length to what I asked: a review or analysis gets full
   findings; a status update gets a few lines.
 - A yes/no question gets yes/no plus at most one line.
