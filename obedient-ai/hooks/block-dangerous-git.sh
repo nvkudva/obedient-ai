@@ -96,6 +96,6 @@ m '(^|[;&|]) *gh +release +delete' && deny "gh release delete removes a publishe
 # ---------------------------------------------------------------------------
 m 'rm +-[a-z]*r[a-z]* +(-[a-z]+ +)*/( |$)'  && deny "rm -rf / would destroy the filesystem"
 m 'rm +-[a-z]*r[a-z]* +(-[a-z]+ +)*~( |/|$)' && deny "rm -rf on the home directory is catastrophic"
-m '(^|[;&|]) *rm +(-{1,2}[a-z-]+ +)*(-[a-z]*r[a-z]*|--recursive)' && deny "recursive rm is not reversible -- use 'trash <path>' instead (restorable from Finder). Note trash exits 5 on a missing path: guard with [ -e path ] && trash path"
+m '(^|[;&|]) *rm +(-{1,2}[a-z-]+ +)*(-[a-z]*r[a-z]*|--recursive)' && deny "recursive rm is not reversible -- use 'trash <path>' instead (restorable from Finder). Note trash exits 5 on a missing path: guard with [ -e path ] && trash path. On SMB/NAS mounts trash fails: mv into a .trash dir on the same volume. Plain rm on a single known file is fine"
 
 exit 0

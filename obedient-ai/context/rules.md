@@ -38,20 +38,12 @@ Findings I must act on go in a bulleted list, max one line per finding.
   generated code, large JSON/YAML. Query them with `rg`, `jq`, `yq`, `head`, `tail`.
 - Pipe noisy commands through filters: `npm test 2>&1 | tail -40`,
   `git log --oneline -20`.
-- Use `sg` (ast-grep) for structural code search and multi-file refactors; `rg` only
-  for plain text. `yq` for YAML/TOML, `duckdb` for CSV/JSON/parquet, `sd` for simple
-  find-and-replace.
+- `sg` (ast-grep) for structural search and multi-file refactors, `yq` for YAML/TOML,
+  `duckdb` for CSV/JSON/parquet/SQLite. A hook blocks grep/find/npx/sed -i/pip install and names
+  the replacement.
 - Node package manager: follow the lockfile. `pnpm-lock.yaml` -> pnpm, `bun.lock` ->
   bun, `package-lock.json` -> npm. Never mix managers in one repo. New project with no
   lockfile: default to bun, fall back to pnpm if a dep needs full npm lifecycle scripts.
-
-## Destructive operations
-
-- Never `rm -rf`. Use `trash <path>` (macOS built-in, restorable via Finder Put Back).
-- `trash` exits 5 on a missing path where `rm -rf` exits 0. Guard chains:
-  `[ -e path ] && trash path`.
-- `trash` fails on SMB/NAS mounts. There, `mv` into a `.trash` dir on the same volume.
-- Plain `rm file` on a single known file is fine. The ban is on recursive deletes.
 
 ## Delegation (when I ask for subagents)
 
@@ -60,7 +52,7 @@ Findings I must act on go in a bulleted list, max one line per finding.
   Do not paste logs, diffs, or file contents."
 - Parallel subagents get non-overlapping scopes — name the files each one owns.
 - Subagents do not see these rules. Put task background and the key constraints
-  (no rm -rf, return contract) in the prompt.
+  (return contract; hooks still apply to them) in the prompt.
 - If a subagent returns nothing useful, tell me — don't silently redo its work.
 
 ## PLAN.md and TODO.md
