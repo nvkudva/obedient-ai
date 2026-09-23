@@ -22,6 +22,12 @@ Findings I must act on go in a bulleted list, max one line per finding.
   abstractions I didn't ask for. No adjacent refactors, no drive-by renames.
 - If you fail 3 times at the same problem, or keep repeating the same approach,
   stop and tell me what you tried.
+- Long jobs (builds, test suites, dev servers, waiting on a log): start them with
+  `run_in_background` and wait with Monitor. Never poll in the foreground with
+  `sleep`, `until` or `while` loops.
+- Delete directories with `trash <path>`. `rm -rf` only on absolute paths inside
+  /tmp, the scratchpad or `$TMPDIR`; a hook blocks other recursive rm and
+  history-destroying git commands.
 
 ## Writing code
 
@@ -39,8 +45,8 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Pipe noisy commands through filters: `npm test 2>&1 | tail -40`,
   `git log --oneline -20`.
 - `sg` (ast-grep) for structural search and multi-file refactors, `yq` for YAML/TOML,
-  `duckdb` for CSV/JSON/parquet/SQLite. A hook blocks grep/find/npx/sed -i/pip install and names
-  the replacement.
+  `duckdb` for CSV/JSON/parquet/SQLite, `uv pip install` or `uv run --with <pkg>`
+  instead of `pip install` (a hook blocks pip install).
 - Node package manager: follow the lockfile. `pnpm-lock.yaml` -> pnpm, `bun.lock` ->
   bun, `package-lock.json` -> npm. Never mix managers in one repo. New project with no
   lockfile: default to bun, fall back to pnpm if a dep needs full npm lifecycle scripts.
