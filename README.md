@@ -42,7 +42,10 @@ Four rules, verbatim, so you can judge the fit before installing:
 - "Never cat/read an entire file when you need part of it. Use `rg -n` (or `grep -n`) to locate, then read a bounded range around the hit."
 - "Max 3 subagents per task. If a task seems to need more, it's scoped wrong — tell me and wait."
 
-The plugin also bundles a `linkedin-post` skill at `obedient-ai/skills/linkedin-post/SKILL.md`, loaded lazily when its description matches the request.
+The plugin also bundles two skills, each loaded lazily when its description matches the request:
+
+- `linkedin-post` (`obedient-ai/skills/linkedin-post/SKILL.md`) drafts LinkedIn posts in the author's voice.
+- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in 4:5 and 16:9 cuts, LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
 
 ## Layout
 
@@ -53,6 +56,8 @@ obedient-ai/
   hooks/hooks.json
   context/rules.md
   skills/linkedin-post/SKILL.md
+  skills/marketing/SKILL.md
+  skills/marketing/templates/{theme.ts,ui.tsx}
 ```
 
 ## Status
