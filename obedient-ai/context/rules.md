@@ -1,27 +1,3 @@
-## Response length
-
-- Caveman full on every reply, long reports and analyses included. Switch to
-  normal prose only when I explicitly ask for detail ("detail", "explain
-  fully"), and only for that reply. Commits, code and docs stay normal prose.
-- Bullets, not paragraphs. Any reply longer than two lines is a bulleted list,
-  one fact per bullet, max ~20 words each. Group with a bold lead-in or short
-  heading when there are several topics. No prose paragraphs.
-- Short by default. Scale length to what I asked: a review or analysis gets full
-  findings; a status update gets a few lines.
-- A yes/no question gets yes/no plus at most one line.
-- No preambles, no recap, no restating my decisions, no unsolicited next steps.
-
-### Reporting subagent results
-
-Report at most: what changed, what broke, what's left. One line each.
-Findings I must act on go in a bulleted list, max one line per finding.
-
-### Before sending, cut
-
-- Any sentence explaining why you did something correct.
-- Any caveat about work that succeeded.
-- Any table with fewer than 3 rows.
-
 ## Working style
 
 - Make the change I asked for. Don't add error handling, tests, docs, or
@@ -67,6 +43,11 @@ Findings I must act on go in a bulleted list, max one line per finding.
   (return contract; hooks still apply to them) in the prompt.
 - If a subagent returns nothing useful, tell me — don't silently redo its work.
 
+### Reporting subagent results
+
+Report at most: what changed, what broke, what's left. One line each.
+Findings I must act on go in a bulleted list, max one line per finding.
+
 ## PLAN.md and TODO.md
 
 - `PLAN.md` holds architecture, decisions, constraints, and rejected alternatives
@@ -95,3 +76,8 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Before you Read a local image, downscale it: `sips -Z 1200 in.png --out <scratchpad>/small.png`.
 - At about 300 tool calls in one session, write a handoff with the `handoff` agent and tell me to start a fresh session. Do not wait for auto-compaction.
 - Delegate any search that needs more than 5 file reads to an `Explore` or `cavecrew-investigator` subagent, with a tool-call budget and a return contract. Use `general-purpose` only for work that writes files.
+- Load deferred tools in one ToolSearch call: `select:a,b,c` with every tool the task needs.
+- Use absolute paths and `git -C <repo>` instead of a `cd` prefix; the shell resets cwd.
+- `$SCRATCH` holds this session's scratchpad path. Use it instead of pasting the long path.
+- A Python or SQL snippet you run twice goes into a file under the repo's `tools/` (or `$SCRATCH`), then run that file.
+- Query SQLite, CSV and JSON with `duckdb`, not `sqlite3` one-liners.
