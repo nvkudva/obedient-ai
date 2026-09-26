@@ -88,3 +88,10 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Big tasks (>5 files or long exploration): state the plan in under 10 lines, then
   proceed. Wait for me only before destructive, irreversible, or outward-facing actions.
 - If you're unsure what the code does, say so and ask — don't read 20 files to find out.
+
+## Efficiency
+
+- Screenshots are the biggest context cost. Read the page as text first (`read_page`, `get_page_text`, `find`, snapshot). Take a screenshot only to judge something visual.
+- Before you Read a local image, downscale it: `sips -Z 1200 in.png --out <scratchpad>/small.png`.
+- At about 300 tool calls in one session, write a handoff with the `handoff` agent and tell me to start a fresh session. Do not wait for auto-compaction.
+- Delegate any search that needs more than 5 file reads to an `Explore` or `cavecrew-investigator` subagent, with a tool-call budget and a return contract. Use `general-purpose` only for work that writes files.
