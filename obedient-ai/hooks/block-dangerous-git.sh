@@ -163,6 +163,13 @@ first_arg() {
   done
 }
 
+# A forced checkout/switch loses nothing when tracked files have no changes.
+tree_clean() {
+  local dir
+  dir=$(jq -r '.cwd // empty' <<< "$payload" 2>/dev/null)
+  [ -z "$(git -C "${dir:-.}" status --porcelain --untracked-files=no 2>/dev/null || echo dirty)" ]
+}
+
 check_git() {
   while [ $# -gt 0 ]; do
     case $1 in
@@ -180,9 +187,9 @@ check_git() {
       long_opt --merge "$@" && { block "git reset --merge can discard local changes"; return; }
       long_opt --keep "$@" && { block "git reset --keep can discard local changes"; return; } ;;
     checkout)
-      any_opt "f --force" "$@" && { block "git checkout --force overwrites local modifications"; return; } ;;
+      any_opt "f --force" "$@" && ! tree_clean && { block "git checkout --force overwrites local modifications"; return; } ;;
     switch)
-      any_opt "f --force --discard-changes" "$@" && { block "git switch --force discards local changes"; return; } ;;
+      any_opt "f --force --discard-changes" "$@" && ! tree_clean && { block "git switch --force discards local changes"; return; } ;;
     restore)
       if any_opt "s --source" "$@" || { any_opt "W --worktree" "$@" && any_opt "S --staged" "$@"; }; then
         block "git restore from another source overwrites working-tree files"; return

@@ -81,3 +81,13 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - `$SCRATCH` holds this session's scratchpad path. Use it instead of pasting the long path.
 - A Python or SQL snippet you run twice goes into a file under the repo's `tools/` (or `$SCRATCH`), then run that file.
 - Query SQLite, CSV and JSON with `duckdb`, not `sqlite3` one-liners.
+
+## Guardrails and browser
+
+- `block-dangerous-git.sh` blocks these, so never try them: `reset --hard/--merge/--keep`, `checkout -f` and `switch -f` on a dirty tree, `restore --source`, `clean -f`, `rm -f`, `stash drop/clear`, any force or `--mirror`/`--delete` push, `filter-branch`/`filter-repo`, `rebase`, `pull --rebase`, `commit --amend`, `branch -d/-D`, `tag -d`, `update-ref -d`, `reflog expire`, `gc --prune=now`, `prune`, `worktree remove -f`, `gh repo delete/archive`, `gh release delete`. If one is truly needed, stop and ask me.
+- Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts.
+- Keep browser JS evals short (under ~5 s). Split long work, and never await slow network calls inside an eval.
+- Use the dev-server port named in the project's CLAUDE.md. If none is named, pick a free port, then record it there.
+- Take a screenshot before any coordinate click. Prefer `find`/`read_page` refs over coordinates.
+- Don't read the same file in full more than twice. Use `rg -n` and a bounded range instead.
+- Run formatters and linters once at the end of an edit batch, not between edits.
