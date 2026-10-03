@@ -5,12 +5,18 @@ description: Analyse a software project and produce a launch kit - a Remotion ma
 
 # Marketing launch kit
 
-Produces, inside the project, `marketing/`:
+## Where the work lives
+
+Video work never goes into the project repo. The work folder is `W = ~/dev/projects/video-demos/<repo>/marketing/`, where `<repo>` is the name of the repo the skill is called from (`basename $(git rev-parse --show-toplevel)`). Create `W` if it is missing. See `~/dev/projects/video-demos/README.md` for how that tree is organised. Only the finished MP4s are copied back into the repo (see §6).
+
+`W` holds:
 
 - `launch-video/`: a Remotion project with a `Launch` (1080×1350) composition and a `LaunchWide` (1920×1080) composition. Both render from the same scenes.
 - `<slug>-launch-4x5.mp4` and `<slug>-launch-16x9.mp4`
 - `posts.md`: LinkedIn, X/Twitter and Instagram copy.
 - `facts.md`: every claim used in the video and posts, each with its source.
+
+Read the repo for the analysis, but write every file above into `W`. Wherever this skill says `marketing/`, it means `W`.
 
 Work in this order. Do not skip the fact sheet or the review loop.
 
@@ -46,7 +52,7 @@ Keep a persistent brand lockup (icon + name, 40px) top-left on every scene betwe
 
 Load the `remotion-best-practices` skill first; its `remotion-create` and `remotion-markup` references are the rules. Then:
 
-1. Scaffold into `marketing/launch-video` with `npx create-video@latest --yes --blank --no-tailwind launch-video`. Pin every `@remotion/*` package to the exact `remotion` version, and add `@remotion/transitions` and `@remotion/google-fonts`.
+1. Scaffold into `W/launch-video` with `npx create-video@latest --yes --blank --no-tailwind launch-video`. Pin every `@remotion/*` package to the exact `remotion` version, and add `@remotion/transitions` and `@remotion/google-fonts`.
 2. Copy `templates/theme.ts` and `templates/ui.tsx` from this skill into `src/`. They provide:
    - **Font:** Google Sans, with Google Sans Code for mono.
    - **Palette:** a vibrant dark palette, plus a `GRADIENT` for accent words.
@@ -83,6 +89,7 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
   - Captions stay on screen at least 2s for every 8 words.
   - Labels under tiles get an explicit width and `whiteSpace: nowrap`.
   - Check that nothing wraps unexpectedly in either aspect ratio.
+- **Layering:** cards, phones, browser and terminal windows are opaque and sit in front of the animated background. Never let the glow show through them. Paired panels (a code card and its side card, a terminal and a browser) share one height. Check both aspect ratios for overlap in the stills.
 - **Brand look:** don't borrow a third party's signature button colour for the CTA. Use a white or brand button.
 - **Checking layout:** render stills and a contact sheet before the full render:
   ```bash
@@ -90,7 +97,7 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
   ffmpeg -i out.mp4 -vf "select='eq(n\,0)+eq(n\,300)',scale=540:-1,tile=5x2" -frames:v 1 sheet.png
   ```
   Then Read the sheet.
-- **Render:** `npx remotion render Launch out/<slug>-4x5.mp4 --codec=h264 --crf=18`, and the same for `LaunchWide`. Copy both finals to `marketing/` and delete superseded renders.
+- **Render:** `npx remotion render Launch out/<slug>-4x5.mp4 --codec=h264 --crf=14`, and the same for `LaunchWide`. Keep both finals in `W` and delete superseded renders.
 
 ## 4. Write the posts (`posts.md`)
 
@@ -124,6 +131,7 @@ For illustration or visual-design problems the reviewer or user flags, spawn a d
 
 ## 6. Deliver
 
+- Copy both final MP4s from `W` into the repo the skill was called from: `<repo>/marketing/<slug>-launch-4x5.mp4` and `<repo>/marketing/<slug>-launch-16x9.mp4` (create `<repo>/marketing/` if needed). Never overwrite an existing `<repo>/demo.mp4`; that is the tutorial demo. If the repo has no `demo.mp4` and the user wants a README video, copy the 16:9 cut to `<repo>/demo.mp4` and embed it with `<video src="demo.mp4" controls muted width="100%"></video>`. `posts.md` and `facts.md` stay in `W`.
 - Send both MP4s with SendUserFile, and show the post text inline.
 - List placeholders still to fill, such as the store link. Report the reviewer's final score and any declined fixes, each with a one-line reason.
-- Do not commit, push or publish anything unless asked.
+- Do not commit, push or publish anything unless asked. Say that the copied MP4s are uncommitted in the repo.

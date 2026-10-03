@@ -1,27 +1,3 @@
-## Response length
-
-- Caveman full on every reply, long reports and analyses included. Switch to
-  normal prose only when I explicitly ask for detail ("detail", "explain
-  fully"), and only for that reply. Commits, code and docs stay normal prose.
-- Bullets, not paragraphs. Any reply longer than two lines is a bulleted list,
-  one fact per bullet, max ~20 words each. Group with a bold lead-in or short
-  heading when there are several topics. No prose paragraphs.
-- Short by default. Scale length to what I asked: a review or analysis gets full
-  findings; a status update gets a few lines.
-- A yes/no question gets yes/no plus at most one line.
-- No preambles, no recap, no restating my decisions, no unsolicited next steps.
-
-### Reporting subagent results
-
-Report at most: what changed, what broke, what's left. One line each.
-Findings I must act on go in a bulleted list, max one line per finding.
-
-### Before sending, cut
-
-- Any sentence explaining why you did something correct.
-- Any caveat about work that succeeded.
-- Any table with fewer than 3 rows.
-
 ## Working style
 
 - Make the change I asked for. Don't add error handling, tests, docs, or
@@ -77,6 +53,11 @@ Findings I must act on go in a bulleted list, max one line per finding.
   (return contract; hooks still apply to them) in the prompt.
 - If a subagent returns nothing useful, tell me — don't silently redo its work.
 
+### Reporting subagent results
+
+Report at most: what changed, what broke, what's left. One line each.
+Findings I must act on go in a bulleted list, max one line per finding.
+
 ## PLAN.md and TODO.md
 
 - `PLAN.md` holds architecture, decisions, constraints, and rejected alternatives
@@ -98,3 +79,25 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Big tasks (>5 files or long exploration): state the plan in under 10 lines, then
   proceed. Wait for me only before destructive, irreversible, or outward-facing actions.
 - If you're unsure what the code does, say so and ask — don't read 20 files to find out.
+
+## Efficiency
+
+- Screenshots are the biggest context cost. Read the page as text first (`read_page`, `get_page_text`, `find`, snapshot). Take a screenshot only to judge something visual.
+- Before you Read a local image, downscale it: `sips -Z 1200 in.png --out <scratchpad>/small.png`.
+- At about 300 tool calls in one session, write a handoff with the `handoff` agent and tell me to start a fresh session. Do not wait for auto-compaction.
+- Delegate any search that needs more than 5 file reads to an `Explore` or `cavecrew-investigator` subagent, with a tool-call budget and a return contract. Use `general-purpose` only for work that writes files.
+- Load deferred tools in one ToolSearch call: `select:a,b,c` with every tool the task needs.
+- Use absolute paths and `git -C <repo>` instead of a `cd` prefix; the shell resets cwd.
+- `$SCRATCH` holds this session's scratchpad path. Use it instead of pasting the long path.
+- A Python or SQL snippet you run twice goes into a file under the repo's `tools/` (or `$SCRATCH`), then run that file.
+- Query SQLite, CSV and JSON with `duckdb`, not `sqlite3` one-liners.
+
+## Guardrails and browser
+
+- `block-dangerous-git.sh` blocks these, so never try them: `reset --hard/--merge/--keep`, `checkout -f` and `switch -f` on a dirty tree, `restore --source`, `clean -f`, `rm -f`, `stash drop/clear`, any force or `--mirror`/`--delete` push, `filter-branch`/`filter-repo`, `rebase`, `pull --rebase`, `commit --amend`, `branch -d/-D`, `tag -d`, `update-ref -d`, `reflog expire`, `gc --prune=now`, `prune`, `worktree remove -f`, `gh repo delete/archive`, `gh release delete`. If one is truly needed, stop and ask me.
+- Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts.
+- Keep browser JS evals short (under ~5 s). Split long work, and never await slow network calls inside an eval.
+- Use the dev-server port named in the project's CLAUDE.md. If none is named, pick a free port, then record it there.
+- Take a screenshot before any coordinate click. Prefer `find`/`read_page` refs over coordinates.
+- Don't read the same file in full more than twice. Use `rg -n` and a bounded range instead.
+- Run formatters and linters once at the end of an edit batch, not between edits.
