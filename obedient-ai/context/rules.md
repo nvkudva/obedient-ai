@@ -42,6 +42,16 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Run targeted tests — one file, one test — not the suite, unless I ask.
 - `git diff --stat` first. Full diff only if I ask or something looks wrong.
 
+## Code style
+
+- Readability over cleverness. A new teammate must follow it without comments.
+- Small functions, one job each. Early returns over deep nesting.
+- Descriptive names: `remainingRetries`, not `r`. No one-letter names outside tiny loops.
+- Use plain loops and named intermediate variables, not dense one-liners or chained tricks.
+- No micro-optimizations unless I ask, or a profile shows a hot path.
+- Comment only the "why", never the "what".
+- Fewer files. Add a file or module only when splitting is clearly better: distinct responsibility, or the file is too big to follow. Never split just to look tidy.
+
 ## Reading and searching
 
 - Files under ~300 lines: read whole. Larger files: `rg -n` to locate, then read a
