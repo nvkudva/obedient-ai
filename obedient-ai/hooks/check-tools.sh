@@ -8,35 +8,12 @@
 set -uo pipefail
 
 DECLINED="${HOME}/.config/obedient-ai/declined-tools"
-
-# command:brew-formula
-tools=(
-  rg:ripgrep
-  fd:fd
-  sg:ast-grep
-  jq:jq
-  yq:yq
-  duckdb:duckdb
-  sd:sd
-  bunx:oven-sh/bun/bun
-  watchexec:watchexec
-  difft:difftastic
-  jc:jc
-  htmlq:htmlq
-  scc:scc
-  ruff:ruff
-  gitleaks:gitleaks
-)
+INSTALLER="$(cd "$(dirname "$0")" && pwd)/install-tools.sh"
 
 missing=()
-formulae=()
-for t in "${tools[@]}"; do
-  cmd=${t%%:*}
-  formula=${t#*:}
-  command -v "$cmd" >/dev/null 2>&1 && continue
+for cmd in $("$INSTALLER" --missing); do
   [ -f "$DECLINED" ] && grep -qx "$cmd" "$DECLINED" && continue
   missing+=("$cmd")
-  formulae+=("$formula")
 done
 
 [ ${#missing[@]} -eq 0 ] && exit 0
@@ -48,6 +25,6 @@ Before starting the user's task, ask this once with AskUserQuestion (options "Ye
 
 "These tools are not installed in your terminal: ${missing[*]}. Installing and using them could improve speed and results. Would you like to install them?"
 
-- Yes: run \`brew install ${formulae[*]}\`. Report the result in one line as its own paragraph, then a blank line, then a horizontal rule (---), then a blank line, then answer the user's message.
+- Yes: run \`"$INSTALLER" ${missing[*]}\`. Report the result in one line as its own paragraph, then a blank line, then a horizontal rule (---), then a blank line, then answer the user's message.
 - No: run \`mkdir -p "$(dirname "$DECLINED")" && printf '%s\n' ${missing[*]} >> "$DECLINED"\` so the user is never asked again. Then use the same blank line, ---, blank line separator before answering the user's message.
 EOF
