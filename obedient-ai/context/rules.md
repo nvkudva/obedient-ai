@@ -24,12 +24,23 @@
 ## Code style
 
 - Readability over cleverness. A new teammate must follow it without comments.
-- Small functions, one job each. Early returns over deep nesting.
+- Small functions, one job each, about 40 lines max. Early returns over deep nesting.
+- Keep side effects (I/O, network, DB) in thin outer functions. Core logic stays pure.
 - Descriptive names: `remainingRetries`, not `r`. No one-letter names outside tiny loops.
+  No generic names (`data`, `handle`, `doStuff`). Booleans read as questions: `is`/`has`/`can`.
 - Use plain loops and named intermediate variables, not dense one-liners or chained tricks.
 - No micro-optimizations unless I ask, or a profile shows a hot path.
 - Comment only the "why", never the "what".
 - Fewer files. Add a file or module only when splitting is clearly better: distinct responsibility, or the file is too big to follow. Never split just to look tidy.
+- Group by feature (`auth/`, `billing/`), not by type. Max 3 levels deep. No `utils/`,
+  `helpers/` or `common/` folders.
+- Name files for what the module does, in the language's convention (camelCase in JS,
+  snake_case in Python). No `utils`, `misc`, `helpers` or `manager` names.
+- One pattern per problem (errors, API calls, config). Find the dominant existing one
+  with `rg` and copy it. Never add a second way.
+- Delete dead code in the same change: if an edit orphans an export or a comment,
+  remove it, confirmed with `rg`.
+- Moves and bulk renames: `git mv`, then `sed` or `sg` for imports. Never retype a file.
 
 ## Coding style (all languages)
 
