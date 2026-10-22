@@ -3,7 +3,7 @@ name: linkedin-post
 description: >
   Craft LinkedIn posts in Vijay's personal writing style — first person, urgent and direct tone, plain language with no jargon. Written from the perspective of
   an Engineering Director who is a visionary, data-driven, and deeply hands-on in AI and engineering. 
-  Use this skill any time the user wants to write, draft, refine, or improve a LinkedIn post. Trigger on phrases like "LinkedIn post", "write a post", "draft a post", "post for LinkedIn", "help me write", or when the user shares a rough idea or bullet points and wants it turned into a post.
+  Use this skill any time the user wants to write, draft, refine, or improve a LinkedIn post. Trigger on phrases like "LinkedIn post", "write a post", "draft a post", "post for LinkedIn", or when the user shares a rough idea or bullet points and wants it turned into a post.
   Always use this skill even if the request is casual or vague, as long as
   LinkedIn or a professional post is implied.
 ---

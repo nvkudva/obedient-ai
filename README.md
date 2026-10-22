@@ -33,7 +33,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 ## How it works
 
-`obedient-ai/hooks/hooks.json` registers one `SessionStart` command, `cat "${CLAUDE_PLUGIN_ROOT}/context/rules.md"`, and Claude Code appends the output to the session context. There is no state, no config and no per-project override. The payload is `obedient-ai/context/rules.md` — 99 lines under seven headings: response length, working style, writing code, reading and searching, delegation, `PLAN.md`/`TODO.md`, and session hygiene.
+`obedient-ai/hooks/hooks.json` registers one `SessionStart` command that asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it; Claude Code appends the output to the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session. There is no state, no config and no per-project override. The payload is `obedient-ai/context/rules.md` — 141 lines under seven headings: response length, working style, writing code, reading and searching, delegation, `PLAN.md`/`TODO.md`, and session hygiene.
 
 OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
@@ -55,7 +55,9 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 
 ```
 .claude-plugin/marketplace.json
+.github/workflows/validate.yml
 opencode/index.ts
+tools/validate.sh
 obedient-ai/
   .claude-plugin/plugin.json
   hooks/hooks.json
@@ -72,15 +74,19 @@ obedient-ai/
 
 ## Status
 
-Version 0.18.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.18.1. The hook and the skills work; the marketplace installs from GitHub and from a local path.
 
-Known gaps, all present as of 7 September 2026:
+Fixed as of 22 October 2026:
 
-- The hook has no assertion behind it. If `context/rules.md` is renamed or emptied, `cat` fails, the session starts with no rules, and nothing warns you.
-- The `linkedin-post` skill is hardcoded to the author's voice and biography. It is not parameterised, so every installer gets that persona.
-- Its trigger phrases include "help me write", which fires on emails, commits and docs that are not LinkedIn posts.
-- No tests and no CI. Nothing validates the three JSON manifests or checks that the rules file is non-empty.
-- The rules are unconditional. The `PLAN.md`/`TODO.md` section applies in repos that have neither file.
+- The session hook now asserts `context/rules.md` is non-empty. It prints the path and exits 2 instead of starting a session with no rules.
+- The `linkedin-post` skill no longer triggers on "help me write"; that phrase fired on emails, commits and docs.
+- `tools/validate.sh` checks the three JSON manifests, both rules files, every context file named in `opencode/index.ts`, every path `hooks.json` runs, and that each skill's `name` matches its directory. `.github/workflows/validate.yml` runs it on push and pull request.
+- The `PLAN.md`/`TODO.md` section now applies only when the repo has one of those files.
+
+Still open:
+
+- The `linkedin-post` skill is hardcoded to the author's voice and biography, so every installer gets that persona. Making it configurable needs a separate voice file, which is a design decision, not a bug fix.
+- The validator checks structure, not runtime. Nothing proves the hooks fire or that skills load in a live session.
 
 ## License
 

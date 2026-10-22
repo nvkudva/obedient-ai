@@ -96,6 +96,8 @@ Findings I must act on go in a bulleted list, max one line per finding.
 
 ## PLAN.md and TODO.md
 
+Applies only when the repo has a `PLAN.md` or `TODO.md`. Never create either file unasked.
+
 - `PLAN.md` holds architecture, decisions, constraints, and rejected alternatives
   with the reason in concise statements. It never holds task state.
 - `TODO.md` is the only file tracking progress. Flat checklist, one line per task,

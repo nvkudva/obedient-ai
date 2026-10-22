@@ -16,7 +16,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cat \"${CLAUDE_PLUGIN_ROOT}/context/rules.md\""
+            "command": "f=\"${CLAUDE_PLUGIN_ROOT}/context/rules.md\"; test -s \"$f\" || { echo \"obedient-ai: $f is missing or empty\" >&2; exit 2; }; cat \"$f\""
           },
           {
             "type": "command",
