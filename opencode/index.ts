@@ -14,7 +14,7 @@ const contextRoot = join(pluginRoot, "context");
 const skillsRoot = join(pluginRoot, "skills");
 
 // Injected in this order at the front of every session's system prompt.
-const contextFiles = ["rules.md", "coding-rules.md"];
+const contextFiles = ["rules.md", "rules-opencode.md"];
 
 async function readContext() {
   const parts = [];
@@ -22,7 +22,9 @@ async function readContext() {
     try {
       parts.push(await readFile(join(contextRoot, name), "utf8"));
     } catch {
-      // A missing context file is not an error: coding-rules.md is optional.
+      // A missing context file is not fatal, but it must not be silent: the
+      // session would look normal while running without its rules.
+      console.warn(`obedient-ai: missing context file ${name}`);
     }
   }
   return parts.join("\n\n");
