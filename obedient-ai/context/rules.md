@@ -65,6 +65,11 @@
   generated code, large JSON/YAML. Query them with `rg`, `jq`, `yq`, `head`, `tail`.
 - Pipe noisy commands through filters: `npm test 2>&1 | tail -40`,
   `git log --oneline -20`.
+- Never Read a guessed path. Locate it first with `rg --files | rg <name>` or `ls`.
+- End exploratory chains (`ls a b; rg x`) with `; true` so a missing path or empty
+  match does not mark the whole call failed.
+- Worktree-isolated session refusing a command: run it with `git -C <worktree>` or
+  from the worktree root. Never retry the same refused command.
 - `sg` (ast-grep) for structural search and multi-file refactors, `yq` for YAML/TOML,
   `duckdb` for CSV/JSON/parquet/SQLite, `uv pip install` or `uv run --with <pkg>`
   instead of `pip install` (a hook blocks pip install).

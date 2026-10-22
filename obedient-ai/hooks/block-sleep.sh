@@ -1,7 +1,8 @@
 #!/bin/bash
-# PreToolUse:Bash guard — blocks foreground `sleep N` (N >= 3). Waiting in the
+# PreToolUse:Bash guard — blocks foreground `sleep N` (N > 10). Waiting in the
 # foreground burns a turn and the cache; background jobs + Monitor re-invoke
-# the model when the condition is met.
+# the model when the condition is met. Short settle pauses (sleep <= 10 after
+# starting an app) pass: a block costs a full model turn, more than the pause.
 # Protocol: exit 0 allow, exit 2 block + stderr reason.
 # Escape hatch: put ALLOW_SLEEP=1 in the command.
 
@@ -14,7 +15,7 @@ case $cmd in *ALLOW_SLEEP=1*) exit 0 ;; esac
 nl=$'\n'
 re="(^|[;&|(${nl}]|[[:space:]]then|[[:space:]]do)[[:space:]]*sleep[[:space:]]+([0-9]+)"
 [[ $cmd =~ $re ]] || exit 0
-(( ${BASH_REMATCH[2]} >= 3 )) || exit 0
+(( ${BASH_REMATCH[2]} > 10 )) || exit 0
 
 printf 'BLOCKED by block-sleep.sh: no foreground sleep.\n' >&2
 printf '  Start the job with run_in_background, then wait with Monitor (until-loop on the condition).\n' >&2
