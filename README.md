@@ -35,6 +35,8 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 `obedient-ai/hooks/hooks.json` registers one `SessionStart` command, `cat "${CLAUDE_PLUGIN_ROOT}/context/rules.md"`, and Claude Code appends the output to the session context. There is no state, no config and no per-project override. The payload is `obedient-ai/context/rules.md` — 99 lines under seven headings: response length, working style, writing code, reading and searching, delegation, `PLAN.md`/`TODO.md`, and session hygiene.
 
+OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
+
 Four rules, verbatim, so you can judge the fit before installing:
 
 - "Default ceiling: 6 lines. To exceed it, the extra lines must be information I asked for, not context you decided I need."
@@ -42,29 +44,35 @@ Four rules, verbatim, so you can judge the fit before installing:
 - "Never cat/read an entire file when you need part of it. Use `rg -n` (or `grep -n`) to locate, then read a bounded range around the hit."
 - "Max 3 subagents per task. If a task seems to need more, it's scoped wrong — tell me and wait."
 
-The plugin also bundles three skills, each loaded lazily when its description matches the request:
+The plugin also bundles four skills, each loaded lazily when its description matches the request:
 
 - `polish` (`obedient-ai/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
 - `linkedin-post` (`obedient-ai/skills/linkedin-post/SKILL.md`) drafts LinkedIn posts in the author's voice.
 - `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in 4:5 and 16:9 cuts, LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
+- `analyze-coding-agent-logs` (`obedient-ai/skills/analyze-coding-agent-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
 
 ## Layout
 
 ```
 .claude-plugin/marketplace.json
+opencode/index.ts
 obedient-ai/
   .claude-plugin/plugin.json
   hooks/hooks.json
   context/rules.md
+  context/rules-opencode.md
   skills/linkedin-post/SKILL.md
   skills/marketing/SKILL.md
   skills/polish/SKILL.md
+  skills/analyze-coding-agent-logs/SKILL.md
+  skills/analyze-coding-agent-logs/queries/opencode.sql
+  skills/analyze-coding-agent-logs/queries/claude-code.sql
   skills/marketing/templates/{theme.ts,ui.tsx}
 ```
 
 ## Status
 
-Version 0.6.0. The hook and the skill both work; the marketplace installs from GitHub and from a local path.
+Version 0.18.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
 
 Known gaps, all present as of 7 September 2026:
 
