@@ -65,6 +65,8 @@
   generated code, large JSON/YAML. Query them with `rg`, `jq`, `yq`, `head`, `tail`.
 - Pipe noisy commands through filters: `npm test 2>&1 | tail -40`,
   `git log --oneline -20`.
+- In auto mode, read files with Read and search with Grep, not `cat`, `sed -n` or
+  `rg` in Bash: every Bash call outside the allowlist waits ~2.5 s for the classifier.
 - Never Read a guessed path. Locate it first with `rg --files | rg <name>` or `ls`.
 - End exploratory chains (`ls a b; rg x`) with `; true` so a missing path or empty
   match does not mark the whole call failed.
