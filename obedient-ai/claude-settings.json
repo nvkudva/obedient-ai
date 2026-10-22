@@ -1,0 +1,28 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(cat *)",
+      "Bash(diff *)",
+      "Bash(file *)",
+      "Bash(gh pr checks*)",
+      "Bash(gh pr list*)",
+      "Bash(gh pr view*)",
+      "Bash(git branch --show-current)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git show*)",
+      "Bash(git status*)",
+      "Bash(head *)",
+      "Bash(jq *)",
+      "Bash(ls *)",
+      "Bash(ls)",
+      "Bash(pwd)",
+      "Bash(rg *)",
+      "Bash(sed -n *)",
+      "Bash(stat *)",
+      "Bash(tail *)",
+      "Bash(wc *)",
+      "Bash(which *)"
+    ]
+  }
+}

@@ -1,6 +1,6 @@
 {
   "name": "obedient-ai",
-  "version": "0.15.0",
+  "version": "0.16.0",
   "description": "Injects standing rules into every OpenCode session and ships the linkedin-post, marketing, and polish skills.",
   "type": "module",
   "exports": {
