@@ -48,7 +48,7 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 
 - `polish` (`obedient-ai/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
 - `linkedin-post` (`obedient-ai/skills/linkedin-post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
-- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in 4:5 and 16:9 cuts, LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
+- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in a 16:9 cut (9:16 mobile cut on request), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
 - `analyze-coding-agent-logs` (`obedient-ai/skills/analyze-coding-agent-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
 
 ## Layout
@@ -74,7 +74,7 @@ obedient-ai/
 
 ## Status
 
-Version 0.19.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.20.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 

@@ -1,6 +1,6 @@
 ---
 name: marketing
-description: Analyse a software project and produce a launch kit - a Remotion marketing video in mobile (4:5) and desktop (16:9) cuts, plus LinkedIn, X/Twitter and Instagram posts - then run a review agent until it is ship-quality. Use when the user asks for a launch video, promo video, marketing video, product announcement, social posts for a launch, or "market this project".
+description: Analyse a software project and produce a launch kit - a Remotion marketing video in a desktop 16:9 cut (a mobile 9:16 cut only when explicitly asked), plus LinkedIn, X/Twitter and Instagram posts - then run a review agent until it is ship-quality. Use when the user asks for a launch video, promo video, marketing video, product announcement, social posts for a launch, or "market this project".
 ---
 
 # Marketing launch kit
@@ -11,8 +11,8 @@ Video work never goes into the project repo. The work folder is `W = ~/dev/proje
 
 `W` holds:
 
-- `launch-video/`: a Remotion project with a `Launch` (1080×1350) composition and a `LaunchWide` (1920×1080) composition. Both render from the same scenes.
-- `<slug>-launch-4x5.mp4` and `<slug>-launch-16x9.mp4`
+- `launch-video/`: a Remotion project with a `LaunchWide` (1920×1080) composition. Only if the user explicitly asks for a mobile cut, add a `Launch` (1080×1920, 9:16) composition rendered from the same scenes.
+- `<slug>-launch-16x9.mp4` (plus `<slug>-launch-9x16.mp4` only on an explicit mobile request)
 - `posts.md`: LinkedIn, X/Twitter and Instagram copy.
 - `facts.md`: every claim used in the video and posts, each with its source.
 
@@ -63,13 +63,13 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
      - `Grad`: gradient text.
      - `Check`, `Cross`, `Cursor`: icons and the demo cursor.
      - `Split` and `useLandscape`: the layout helpers described below.
-3. Write every scene in its own file on the 1080×1350 portrait canvas. Wrap it as `<Background><Split text={…} visual={…} band={[top, bottom]} /></Background>`.
+3. Write every scene in its own file, authored on the 1080×1350 design canvas. `Split` centres it vertically in 1080×1920 portrait and maps it to 1920×1080 landscape. Wrap it as `<Background><Split text={…} visual={…} band={[top, bottom]} /></Background>`.
    - `text`: the kicker and headline, in normal flow.
    - `visual`: absolutely positioned elements on the portrait canvas.
    - `band`: the vertical range the visual occupies. In landscape, `Split` moves the text to a left column and centres that band on the right.
    - If an element sits under the visual in portrait but belongs in the text column in landscape, branch on `useLandscape()`.
 4. In `Launch.tsx`, lay out a `TransitionSeries` with 12–14 frame fades and slides. Put the brand card inside `<Sequence from={-44}>` so its entrance has finished by frame 0. Add a `Lockup` overlay.
-5. In `Root.tsx`, register the scenes in a `Folder`, plus `Launch` at 1080×1350 and `LaunchWide` at 1920×1080. Both compositions use the same component and the same `TOTAL`, where `TOTAL` = sum of scenes − sum of transitions.
+5. In `Root.tsx`, register the scenes in a `Folder`, plus `LaunchWide` at 1920×1080. Add `Launch` at 1080×1920 only on an explicit mobile request; it uses the same component and the same `TOTAL`. `TOTAL` is `TOTAL` = sum of scenes − sum of transitions.
 
 ### Gotchas (all hit in practice)
 
@@ -88,8 +88,8 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
   - Minimum 28px for anything that must be read at 1080 wide; headlines 84–96px.
   - Captions stay on screen at least 2s for every 8 words.
   - Labels under tiles get an explicit width and `whiteSpace: nowrap`.
-  - Check that nothing wraps unexpectedly in either aspect ratio.
-- **Layering:** cards, phones, browser and terminal windows are opaque and sit in front of the animated background. Never let the glow show through them. Paired panels (a code card and its side card, a terminal and a browser) share one height. Check both aspect ratios for overlap in the stills.
+  - Check that nothing wraps unexpectedly in the rendered aspect ratio(s).
+- **Layering:** cards, phones, browser and terminal windows are opaque and sit in front of the animated background. Never let the glow show through them. Paired panels (a code card and its side card, a terminal and a browser) share one height. Check the stills for overlap in every rendered aspect ratio.
 - **Brand look:** don't borrow a third party's signature button colour for the CTA. Use a white or brand button.
 - **Checking layout:** render stills and a contact sheet before the full render:
   ```bash
@@ -97,13 +97,13 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
   ffmpeg -i out.mp4 -vf "select='eq(n\,0)+eq(n\,300)',scale=540:-1,tile=5x2" -frames:v 1 sheet.png
   ```
   Then Read the sheet.
-- **Render:** `npx remotion render Launch out/<slug>-4x5.mp4 --codec=h264 --crf=14`, and the same for `LaunchWide`. Keep both finals in `W` and delete superseded renders.
+- **Render:** `npx remotion render LaunchWide out/<slug>-16x9.mp4 --codec=h264 --crf=14`, and the same for `Launch` (`<slug>-9x16.mp4`) only if a mobile cut was requested. Keep the finals in `W` and delete superseded renders.
 
 ## 4. Write the posts (`posts.md`)
 
 Use only claims from `facts.md`. Every post covers the pain, the differentiator, 3–5 proof points, the CTA and the links.
 
-- **LinkedIn:** if a `linkedin-post` skill exists, load it and follow its voice and format. Otherwise: first person, ~150–220 words, no rhetorical-question close, a `Links` block (store and source), and exactly 3 specific hashtags. Attach the **4:5** video.
+- **LinkedIn:** if a `linkedin-post` skill exists, load it and follow its voice and format. Otherwise: first person, ~150–220 words, no rhetorical-question close, a `Links` block (store and source), and exactly 3 specific hashtags. Attach the **16:9** video (or the 9:16 one if a mobile cut was requested).
 - **X/Twitter:**
   - Write one standalone post of ≤280 characters: a hook plus the link.
   - Then write an optional 4–6 post thread: pain, how it works, proof, privacy, CTA.
@@ -111,7 +111,7 @@ Use only claims from `facts.md`. Every post covers the pain, the differentiator,
 - **Instagram:**
   - The caption's first 125 characters are the hook, because that's all that shows before "more".
   - Keep short lines with line breaks, "Link in bio", and 5–10 niche hashtags at the end.
-  - Attach the **4:5** video. If a Reel is wanted, say that 9:16 needs a third composition.
+  - Attach the **16:9** video, or the 9:16 one if a mobile cut was requested. A 9:16 cut works as a Reel; it still needs an explicit request.
 
 Match the user's own voice when they have one. Say "try it now and tell me what you think" rather than generic engagement bait.
 
@@ -119,7 +119,7 @@ Match the user's own voice when they have one. Say "try it now and tell me what 
 
 Spawn a reviewer with the Agent tool (`general-purpose`, foreground) using this prompt, filled in:
 
-> You are a senior B2C product-marketing director approving paid spend. Review harshly and specifically. Product: `<one line>`. Audience: `<…>`. Videos (read-only): `<4x5 path>`, `<16x9 path>` (silent; feeds autoplay muted; most viewers watch 3–8s). Posts: `<posts.md>`. Extract frames with `ffmpeg -i <mp4> -vf fps=2,scale=540:-1 <scratch>/f_%03d.png`, tile them into contact sheets, and Read them; inspect the first 3s closely. Judge the hook in 2s, value-prop clarity, readability on mute, polish, claim credibility, demo clarity, CTA, brand consistency, platform fit and each post. Budget 25 tool calls. Return ONLY: score /10 with a one-line verdict; at most 12 fixes, highest impact first, each with a timestamp, the problem and the exact change; up to 3 edits per post. Under 450 words; no file contents.
+> You are a senior B2C product-marketing director approving paid spend. Review harshly and specifically. Product: `<one line>`. Audience: `<…>`. Videos (read-only): `<16x9 path>` (and `<9x16 path>` if a mobile cut exists) (silent; feeds autoplay muted; most viewers watch 3–8s). Posts: `<posts.md>`. Extract frames with `ffmpeg -i <mp4> -vf fps=2,scale=540:-1 <scratch>/f_%03d.png`, tile them into contact sheets, and Read them; inspect the first 3s closely. Judge the hook in 2s, value-prop clarity, readability on mute, polish, claim credibility, demo clarity, CTA, brand consistency, platform fit and each post. Budget 25 tool calls. Return ONLY: score /10 with a one-line verdict; at most 12 fixes, highest impact first, each with a timestamp, the problem and the exact change; up to 3 edits per post. Under 450 words; no file contents.
 
 Then:
 
@@ -131,7 +131,7 @@ For illustration or visual-design problems the reviewer or user flags, spawn a d
 
 ## 6. Deliver
 
-- Copy both final MP4s from `W` into the repo the skill was called from: `<repo>/marketing/<slug>-launch-4x5.mp4` and `<repo>/marketing/<slug>-launch-16x9.mp4` (create `<repo>/marketing/` if needed). Never overwrite an existing `<repo>/demo.mp4`; that is the tutorial demo. If the repo has no `demo.mp4` and the user wants a README video, copy the 16:9 cut to `<repo>/demo.mp4` and embed it with `<video src="demo.mp4" controls muted width="100%"></video>`. `posts.md` and `facts.md` stay in `W`.
-- Send both MP4s with SendUserFile, and show the post text inline.
+- Copy the final MP4s from `W` into the repo the skill was called from: `<repo>/marketing/<slug>-launch-16x9.mp4` (and `-9x16.mp4` if a mobile cut was made) (create `<repo>/marketing/` if needed). Never overwrite an existing `<repo>/demo.mp4`; that is the tutorial demo. If the repo has no `demo.mp4` and the user wants a README video, copy the 16:9 cut to `<repo>/demo.mp4` and embed it with `<video src="demo.mp4" controls muted width="100%"></video>`. `posts.md` and `facts.md` stay in `W`.
+- Send the MP4s with SendUserFile, and show the post text inline.
 - List placeholders still to fill, such as the store link. Report the reviewer's final score and any declined fixes, each with a one-line reason.
 - Do not commit, push or publish anything unless asked. Say that the copied MP4s are uncommitted in the repo.

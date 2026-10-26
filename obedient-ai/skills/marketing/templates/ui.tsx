@@ -210,8 +210,8 @@ export const useLandscape = () => {
   return width > height;
 };
 
-// Scenes are drawn on the 1080×1350 portrait canvas. In portrait both layers
-// sit where they were designed; in landscape the text moves to a left column
+// Scenes are drawn on a 1080×1350 design canvas. In portrait (4:5 or 9:16) both
+// layers sit where they were designed, centred vertically in the frame; in landscape the text moves to a left column
 // and the band [top, bottom] of the visual layer is centred in the right half.
 export const Split: React.FC<{
   text: React.ReactNode;
@@ -220,16 +220,25 @@ export const Split: React.FC<{
   textTop?: number;
 }> = ({ text, visual, band, textTop = 110 }) => {
   const landscape = useLandscape();
+  const { height } = useVideoConfig();
   if (!landscape) {
     return (
-      <>
+      <div
+        style={{
+          position: "absolute",
+          top: (height - 1350) / 2,
+          left: 0,
+          width: 1080,
+          height: 1350,
+        }}
+      >
         <div
           style={{ position: "absolute", top: textTop, left: 90, right: 90 }}
         >
           {text}
         </div>
         <AbsoluteFill>{visual}</AbsoluteFill>
-      </>
+      </div>
     );
   }
   const h = band[1] - band[0];
