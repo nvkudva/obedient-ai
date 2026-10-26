@@ -74,7 +74,7 @@ obedient-ai/
 
 ## Status
 
-Version 0.20.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.20.1. The hook and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 
