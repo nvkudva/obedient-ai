@@ -8,6 +8,11 @@
       "name": "obedient-ai",
       "source": "./obedient-ai",
       "description": "Injects standing response-length and working-style rules at session start, and ships the linkedin-post and marketing skills."
+    },
+    {
+      "name": "token-guard",
+      "source": "./token-guard",
+      "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
     }
   ]
 }
