@@ -25,14 +25,12 @@ export const register: Register = on => {
 
   on('command.run', { command: 'guard' }, async $ => {
     const home = (await $.env.get('HOME')) ?? ''
-    const versions = await $.fs.list(`${home}/.claude/plugins/cache/obedient-ai/obedient-ai`).catch(() => [])
     const { stdout } = await $.process.run(['du', '-sh', `${home}/.claude/projects`]).catch(() => ({ stdout: '?' }))
     return {
       text: [
         `turns ${turns} (warn at ${MAX_TURNS}) · calls ${calls} (warn at ${MAX_CALLS})`,
         `duplicate Reads blocked ${stats.duplicateReadsBlocked} · images downscaled ${stats.imagesDownscaled} · Reads capped ${stats.readsCapped}`,
         `repeat Bash ${stats.repeatBash} · inline patch helpers ${stats.patchHelpers}`,
-        `obedient-ai cached versions: ${versions.length} (delete all but the newest)`,
         `transcripts: ${stdout.split('\t')[0]}`,
       ].join('\n'),
     }

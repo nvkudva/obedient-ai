@@ -51,6 +51,20 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 - `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in a 16:9 cut (9:16 mobile cut on request), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
 - `analyze-coding-agent-logs` (`obedient-ai/skills/analyze-coding-agent-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
 
+## token-guard
+
+A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir token-guard`.
+
+- Status line shows `turns N · calls M`; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
+- `Read` of a missing path is denied with a hint to run `rg --files` first.
+- `Read` of a PNG or JPEG over 300 KB is downscaled with `sips -Z 1200` (macOS) and the smaller copy is read.
+- `Read` of an unchanged file already read this session is denied; a changed modification time allows it. Passing `offset` or `limit` always allows it.
+- `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
+- `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
+- `/guard` prints the counters, the transcripts folder size.
+
+Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
+
 ## Layout
 
 ```
@@ -70,6 +84,10 @@ obedient-ai/
   skills/analyze-coding-agent-logs/queries/opencode.sql
   skills/analyze-coding-agent-logs/queries/claude-code.sql
   skills/marketing/templates/{theme.ts,ui.tsx}
+token-guard/
+  .claude-plugin/plugin.json
+  hooks/hooks.json
+  hooks/register.ts
 ```
 
 ## Status
