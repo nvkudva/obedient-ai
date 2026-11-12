@@ -7,12 +7,12 @@
     {
       "name": "obedient-ai",
       "source": "./obedient-ai",
-      "description": "Injects standing response-length and working-style rules at session start, and ships the linkedin-post and marketing skills."
+      "description": "Standing rules at session start, git/sleep/pip guard hooks, a prompt-cache keep-alive, and the polish, analyze-coding-agent-logs, linkedin-post and marketing skills."
     },
     {
       "name": "token-guard",
       "source": "./token-guard",
-      "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
+      "description": "Warns on long sessions, offers a fresh start on unrelated tasks, and trims wasteful Reads and repeated Bash calls."
     }
   ]
 }

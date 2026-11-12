@@ -14,13 +14,14 @@ done
 brew install ripgrep fd ast-grep jq yq duckdb sd bun watchexec difftastic \
   jc htmlq scc ruff gitleaks gnu-sed coreutils bash
 
-# Adds the allowlist and shell; keeps every other key and rule already in the file.
+# Adds the allowlist and shell; your existing keys win, and the old file is saved as settings.json.bak.
 settings=~/.claude/settings.json
 mkdir -p ~/.claude
 [ -f "$settings" ] || echo '{}' > "$settings"
+cp "$settings" "$settings.bak"
 jq -s --arg shell "$(brew --prefix)/bin/bash" '
   .[0] as $mine | .[1] as $ours
-  | ($mine * $ours)
+  | ($ours * $mine)
   | .permissions.allow = (($mine.permissions.allow // []) + $ours.permissions.allow | unique)
   | .env.CLAUDE_CODE_SHELL = $shell
 ' "$settings" "$(dirname "$0")/claude-settings.json" > "$settings.tmp" && mv "$settings.tmp" "$settings"

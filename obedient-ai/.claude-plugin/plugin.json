@@ -2,7 +2,7 @@
   "name": "obedient-ai",
   "displayName": "Obedient AI",
   "version": "0.22.0",
-  "description": "SessionStart hook that loads standing rules (response length, working style, delegation, session hygiene) into every session, plus a linkedin-post skill for drafting posts in Vijay's voice and a marketing skill that builds a launch video and social posts for a project.",
+  "description": "Loads standing rules (working style, code style, delegation, session hygiene) into every session, guards against dangerous git, foreground sleeps and pip install, keeps the prompt cache warm, and ships the polish, analyze-coding-agent-logs, linkedin-post and marketing skills.",
   "userConfig": {
     "intervalMinutes": {
       "type": "number",

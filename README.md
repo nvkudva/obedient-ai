@@ -1,15 +1,17 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with one plugin that injects a fixed set of standing rules into every session, for people who want Claude terse by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with two plugins. `obedient-ai` injects standing rules into every session, adds guard hooks for dangerous git, foreground sleeps and `pip install`, a keep-alive for the prompt cache, an optional output style, and four skills. `token-guard` warns before a session gets expensive and trims wasteful Reads. Both are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
 ## Requirements
 
 - Claude Code, either the CLI or claude.ai cloud sessions
-- A POSIX shell on PATH — the session hook runs `cat`, so it silently does nothing on a Windows install without one
+- A POSIX shell on PATH, plus `jq` for the guard hooks. On Windows without one, the hooks do nothing
 - Git, if you install from a local clone
-- No accounts, keys, dependencies or network calls
+- macOS is the tested platform: `export-scratch.sh` builds a `/private/tmp` path, and token-guard downscales images with `sips`
+- `setup.sh` is optional and does touch the network and your machine, see "Setup script" below
+- No accounts or keys
 
 ## Run it
 
@@ -33,16 +35,31 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 ## How it works
 
-`obedient-ai/hooks/hooks.json` registers one `SessionStart` command that asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it; Claude Code appends the output to the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session. There is no state, no config and no per-project override. The payload is `obedient-ai/context/rules.md` — 141 lines under seven headings: response length, working style, writing code, reading and searching, delegation, `PLAN.md`/`TODO.md`, and session hygiene.
+`obedient-ai/hooks/hooks.json` registers these hooks:
+
+- `SessionStart`: asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it into the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session.
+- `SessionStart`: `hooks/export-scratch.sh` exports `$SCRATCH` (the session scratchpad path) and puts GNU `sed` and `timeout` first on PATH when Homebrew has them.
+- `PreToolUse:Bash`: `block-dangerous-git.sh` blocks irreversible git and `rm` commands (list in `rules.md`, "Guardrails"). It is skipped in auto mode. Bypass one command with `ALLOW_DANGEROUS_GIT=1`.
+- `PreToolUse:Bash`: `block-sleep.sh` blocks a foreground `sleep` over 10 seconds. Bypass with `ALLOW_SLEEP=1`.
+- `PreToolUse:Bash`: `prefer-fast-tools.sh` blocks `pip install` when `uv` is installed. Bypass with `ALLOW_SLOW_TOOL=1`.
+- `modules`: `hooks/cacheKeeper.ts` is a keep-alive. After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Set the three values in the plugin's user config; raise `minTokens` very high to effectively disable it.
+
+There is no per-project override. `obedient-ai/output-styles/Minimal-Custom.md` is an output style you select yourself with `/output-style`; it is not applied automatically.
+
+The rules payload is `obedient-ai/context/rules.md`, 142 lines under ten headings: working style, writing code, code style, coding style, reading and searching, delegation, `PLAN.md`/`TODO.md`, session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
 OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
 Four rules, verbatim, so you can judge the fit before installing:
 
-- "Default ceiling: 6 lines. To exceed it, the extra lines must be information I asked for, not context you decided I need."
 - "Edit, never rewrite. Use the smallest `old_string` that is still unique."
-- "Never cat/read an entire file when you need part of it. Use `rg -n` (or `grep -n`) to locate, then read a bounded range around the hit."
-- "Max 3 subagents per task. If a task seems to need more, it's scoped wrong — tell me and wait."
+- "Run targeted tests — one file, one test — not the suite, unless I ask."
+- "If you fail 3 times at the same problem, or keep repeating the same approach, stop and tell me what you tried."
+- "Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts."
+
+## Setup script
+
+`obedient-ai/setup.sh` runs only from the plugin's `Setup` hook, which fires on `claude --init-only`, not on every session. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `obedient-ai/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
 
 The plugin also bundles four skills, each loaded lazily when its description matches the request:
 
@@ -55,13 +72,15 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 
 A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir token-guard`.
 
-- Status line shows `turns N · calls M`; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
+- Status line shows context percent, cache time left, turns, calls and trimmed count; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
+- A new, unrelated prompt in a session over 150k tokens asks whether to continue, start fresh or compact first.
+- `cd dir && git …` is rewritten to `git -C dir …`.
 - `Read` of a missing path is denied with a hint to run `rg --files` first.
 - `Read` of a PNG or JPEG over 300 KB is downscaled with `sips -Z 1200` (macOS) and the smaller copy is read.
 - `Read` of an unchanged file already read this session is denied; a changed modification time allows it. Passing `offset` or `limit` always allows it.
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
-- `/guard` prints the counters, the transcripts folder size.
+- `/guard` prints the counters and the transcripts folder size.
 
 Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
 
@@ -75,6 +94,11 @@ tools/validate.sh
 obedient-ai/
   .claude-plugin/plugin.json
   hooks/hooks.json
+  hooks/{block-dangerous-git,block-sleep,prefer-fast-tools,export-scratch}.sh
+  hooks/cacheKeeper.ts
+  setup.sh
+  claude-settings.json
+  output-styles/Minimal-Custom.md
   context/rules.md
   context/rules-opencode.md
   skills/linkedin-post/SKILL.md
@@ -92,7 +116,7 @@ token-guard/
 
 ## Status
 
-Version 0.22.0. The hook and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.22.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 

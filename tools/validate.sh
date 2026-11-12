@@ -8,7 +8,7 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 
 cd "$(dirname "$0")/.." || exit 1
 
-for f in .claude-plugin/marketplace.json obedient-ai/.claude-plugin/plugin.json obedient-ai/hooks/hooks.json; do
+for f in .claude-plugin/marketplace.json obedient-ai/.claude-plugin/plugin.json obedient-ai/hooks/hooks.json obedient-ai/claude-settings.json token-guard/.claude-plugin/plugin.json token-guard/hooks/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
@@ -22,6 +22,14 @@ done
 
 for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' obedient-ai/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do
   if [ -e "obedient-ai/$ref" ]; then ok "hook path $ref exists"; else bad "hook path $ref missing"; fi
+done
+
+for ref in $(grep -o '"\./[^"]*"' obedient-ai/hooks/hooks.json | tr -d '"'); do
+  if [ -e "obedient-ai/hooks/$ref" ]; then ok "module $ref exists"; else bad "module $ref missing"; fi
+done
+
+for ref in $(grep -o '"\./[^"]*"' token-guard/hooks/hooks.json | tr -d '"'); do
+  if [ -e "token-guard/hooks/$ref" ]; then ok "token-guard module $ref exists"; else bad "token-guard module $ref missing"; fi
 done
 
 for dir in obedient-ai/skills/*/; do
