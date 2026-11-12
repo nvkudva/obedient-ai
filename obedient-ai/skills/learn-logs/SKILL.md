@@ -1,5 +1,5 @@
 ---
-name: analyze-coding-agent-logs
+name: learn-logs
 description: >
   Audit a coding agent's own session logs for failures, repeated work, wasted calls and lost time.
   Ships a working adapter for OpenCode's SQLite store and for Claude Code JSONL transcripts, and
@@ -38,7 +38,7 @@ Every analysis runs on the same columns, whatever the source:
 
 Adapters for the two common shapes:
 
-- SQLite + JSON parts → `queries/opencode.sql`
+- SQLite + JSON parts → `queries/opencode.sql` (run as `sed "s|__HOME__|$HOME|" opencode.sql | duckdb -box`; DuckDB does not expand `~` in `ATTACH`)
 - JSONL with `message.content[]` → `queries/claude-code.sql`
 
 Run the adapter for each agent present, then the analyses below against the `t` view it creates.

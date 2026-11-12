@@ -1,7 +1,7 @@
 -- Claude Code adapter. Creates view `t` from JSONL transcripts.
 -- Also works for any harness that stores tool calls as message.content[] with
 -- tool_use / tool_result pairs. Adjust the glob and the field paths in `calls`/`results`.
--- Usage: duckdb -box < claude-code.sql
+-- Usage: duckdb -box < claude-code.sql   (paths use ~, which DuckDB expands)
 
 CREATE OR REPLACE VIEW calls AS
   SELECT
@@ -12,7 +12,7 @@ CREATE OR REPLACE VIEW calls AS
     json_extract(c.value,'$.input') AS input,
     json_extract_string(c.value,'$.input.file_path') AS fp,
     json_extract_string(c.value,'$.input.command') AS command
-  FROM read_json_auto('/Users/vijay/.claude/projects/*/*.jsonl', union_by_name=true) m,
+  FROM read_json_auto('~/.claude/projects/*/*.jsonl', union_by_name=true) m,
        json_each(json_extract(m.json,'$.message.content')) c
   WHERE json_extract_string(c.value,'$.type')='tool_use';
 
@@ -22,7 +22,7 @@ CREATE OR REPLACE VIEW results AS
     CAST(json_extract_string(m.json,'$.timestamp') AS TIMESTAMPTZ) AS ts,
     json_extract_string(c.value,'$.is_error') AS is_error,
     json_extract_string(c.value,'$.content')    AS content
-  FROM read_json_auto('/Users/vijay/.claude/projects/*/*.jsonl', union_by_name=true) m,
+  FROM read_json_auto('~/.claude/projects/*/*.jsonl', union_by_name=true) m,
        json_each(json_extract(m.json,'$.message.content')) c
   WHERE json_extract_string(c.value,'$.type')='tool_result';
 

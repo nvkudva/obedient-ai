@@ -9,13 +9,13 @@ description: >
 ---
 # Polish
 
-Apply the "Code style" and "Coding style" rules already in context to code that exists. Do not restate them here.
+Apply the "Code style" and "Coding style" rules already in context to code that exists. If they are not in context, use this short form: small single-purpose functions (about 40 lines), descriptive names, group by feature, no `utils`/`helpers` folders, call local code through its module, delete dead code.
 Behavior must not change. No new abstractions. Never touch README files.
 
 ## 1. Prepare
 - `git status` must be clean. If not, stop and ask.
-- `git switch -c chore/cleanup`.
-- Find the test and lint commands (project `CLAUDE.md`, `package.json`, `pyproject.toml`). Note them for step 4.
+- `git switch -c chore/cleanup-$(date +%Y%m%d)`; if that name exists, add a suffix.
+- Find the test and lint commands (project `CLAUDE.md`, `package.json`, `pyproject.toml`). Run them once now and record the result. Later runs are compared with this baseline: a test that already failed is not yours to fix.
 
 ## 2. Map (cheap)
 - `git ls-files` only. Skip `node_modules`, `dist`, `build`, lockfiles, assets, generated files, snapshots, fixtures.

@@ -1,11 +1,10 @@
 ---
-name: linkedin-post
+name: post
 description: >
-  Craft LinkedIn posts in Vijay's personal writing style — first person, urgent and direct tone, plain language with no jargon. Written from the perspective of
-  an Engineering Director who is a visionary, data-driven, and deeply hands-on in AI and engineering. 
-  Use this skill any time the user wants to write, draft, refine, or improve a LinkedIn post. Trigger on phrases like "LinkedIn post", "write a post", "draft a post", "post for LinkedIn", or when the user shares a rough idea or bullet points and wants it turned into a post.
-  Always use this skill even if the request is casual or vague, as long as
-  LinkedIn or a professional post is implied.
+  Craft LinkedIn posts, and the short X version, in Vijay's personal writing style — first person, direct, plain language with no jargon.
+  Use when the user wants to write, draft, shorten, review or humanize a LinkedIn or X post, including a project or release announcement.
+  Trigger on "LinkedIn post", "X post", "twitter post", "post for LinkedIn", or a rough idea or bullet points to turn into one.
+  Not for blog posts, emails, commit messages or docs.
 ---
 # LinkedIn Post Skill
 
@@ -36,7 +35,7 @@ This combination is the core differentiator. The posts should feel like they com
 
 - **First person** — always "I", written from lived experience and direct observation
 - **Direct** — say the thing plainly. Not the same as absolute: qualifying an observation you genuinely hold loosely ("seems to be settling on", "I think the answer is", "Not perfect but works") is honest, not weak. Hedge the claim, never the sentence.
-- **Plain language** — no *corporate* buzzwords or consultant fluff. Technical specifics are the opposite of jargon here: tps, VRAM, MoE, 27B, MTPLX variants all belong in. Name the thing precisely.
+- **Plain language** — no *corporate* buzzwords or consultant fluff. Name the model, tool or product precisely. But keep eval and internals detail out: agreement percentages, probability deltas, per-query milliseconds, quantization or tensor internals. Say the outcome in plain words ("quantized it, 1.6 GB down to 524 MB, easy to load"). The reader is technical but not an expert in this corner.
 - **One thread** — a single argument from start to finish. A short aside is fine ("Btw", "Oh wait, there's more") as long as it returns to the thread.
 - **Imperfect and human** — occasional short fragments. A sentence that starts mid-thought. Not everything needs to be a complete grammatical sentence. Reads like a smart person thinking out loud, not a press release.
 - **No excessive metaphors** — one strong observation beats three clever analogies
@@ -55,7 +54,7 @@ Bullets and numbered lists are allowed in the post body. Use them when the conte
 
 ## Post structure
 
-The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook → what I did → closing line and stops. Never label the sections.
+The arc for opinion posts (project announcements use the launch shape below). Steps 2 and 4 are optional — a pure tool post often runs hook → what I did → closing line and stops. Never label the sections.
 
 1. **Hook** — a sharp, direct opening that earns the scroll stop. Often a single sentence. Can be a contradiction, a counterintuitive observation, or a blunt statement of something most people dance around.
 2. **The problem or reset** — what's broken, changing, or misunderstood. Establish why this matters right now.
@@ -65,11 +64,45 @@ The usual arc. Steps 2 and 4 are optional — a pure tool post often runs hook �
 
 ---
 
+## Project launch posts (the usual request)
+
+Most requests announce something the user built or shipped. Use this shape instead of the leader arc above. Say what it is, then why they built it, in their own story.
+
+1. **Opening** — what it is in one plain line ("Think X, but for Y") or the user's own origin line ("I was worried about…", "I recently saw… and wanted to see if…", "New project from my AI factory fixing a pain I've had for years"). Never open with a thesis about the industry.
+2. **Why I built it** — the user's own pain or curiosity. Use only what they told you or the repo shows.
+3. **What it does** — plain words, at most 3 or 4 short bullets or 2 short paragraphs. Include the credit: the original model or tool and its author, and which model or tool did which job.
+4. **Honest bit** — one real limit or "mixed" result when there is one.
+5. **Close** — an easy ask: try it and tell me what you think. Then `Links`.
+
+Include when they apply: the code link, the product or live link, the original model or paper, "no login, no ads, no tracking", and any "for educational purposes only" note the user wants.
+
+---
+
+## X version
+
+Whenever you write a LinkedIn post, also give a short X version unless told not to. The user asked for it after nearly every post.
+
+- One post of 280 characters or less: the hook plus the link. Optional 4 to 6 post thread only if asked.
+- Same voice and the same facts, no new claims. 1 or 2 hashtags at most.
+
+---
+
+## Facts and first-person claims
+
+Wrong facts and made-up experience were the most costly mistakes in past drafts.
+
+- Use a number, a speed, a size or a "who did what" only if the user said it or the repo shows it. Check the README, code and commits. Otherwise leave it out or ask.
+- Do not invent personal history ("most of my code does X", "in my tests"). If the opening needs one and the user has not given it, ask once with lettered options.
+- Attribution matters: which model translated, which tool built, who created the original. If unsure, say so in a note under the post and do not guess.
+- After the post, add a short `Check before posting` list: anything unverified (repo public, link live, numbers).
+
+---
+
 ## Length
 
-**Under 200 words is the target. 300 is the absolute ceiling.**
+**Project launch post: 80–160 words. Opinion post: under 200. Absolute ceiling: 300.**
 
-Aim below 200 by default — long enough to earn credibility, short enough to respect attention. Never pad. If the idea is tight, keep the post tight. Only go past 200 when the material genuinely needs it (a numbered setup, a ranked comparison), and never past 300.
+The user has asked for a shorter post in most sessions, so start short. Never pad. If the idea is tight, keep the post tight. Go past 200 only when the material genuinely needs it (a numbered setup, a ranked comparison), and never past 300.
 
 If it still doesn't fit in 300, don't stretch the post — say so and offer to split it into two posts or a blog.
 
@@ -118,6 +151,10 @@ A post that's only visionary reads like a pundit. Only data-driven reads like a 
 - Over-explanation — trust the reader to be smart
 - Generic engagement bait: "What do you think?", "Agree?", "Thoughts?". A genuine ask is different and allowed — "Let me know if you have a better setup, I would love to try it out" is a real request, not a bid for comments.
 - Phrases that sound like AI wrote them: "It's worth noting that...", "This is a real shift", "It's not just X, it's Y", "Here's the thing"
+- Em dashes. Use a comma, a full stop or "and".
+- Neat parallel pairs ("Nothing is sampled, so there is nothing to hallucinate"), three-beat lists of adjectives, and a punchy fragment as the last line. The user flagged these as "feels Claude generated".
+- Benchmark and comparison numbers against another product. Keep it simple.
+- A pitch opening or an industry thesis before saying what the thing is.
 
 ---
 
@@ -125,6 +162,9 @@ A post that's only visionary reads like a pundit. Only data-driven reads like a 
 
 When the user provides a rough draft:
 
+- If they dictate a line or an opening, keep their words. Fix typos and nothing else.
+- To make a draft "human", "more personal" or "imperfect": remove the tells above, shorten, keep a casual aside ("Btw"), and keep their rough phrasing where it is clear.
+- To review a post they wrote: check every fact against the repo (who did what, numbers, links), list what is wrong or loose, then give the fixed version. Do not rewrite their voice.
 - Stay close to their original structure and ideas
 - Fix flow and clarity without rewriting the voice
 - Don't expand what they wrote — if concise, stay concise

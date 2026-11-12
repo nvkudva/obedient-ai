@@ -1,22 +1,32 @@
 ---
 name: marketing
-description: Analyse a software project and produce a launch kit - a Remotion marketing video in a desktop 16:9 cut (a mobile 9:16 cut only when explicitly asked), plus LinkedIn, X/Twitter and Instagram posts - then run a review agent until it is ship-quality. Use when the user asks for a launch video, promo video, marketing video, product announcement, social posts for a launch, or "market this project".
+description: Analyse a software project and produce a launch kit - a Remotion marketing video (desktop 16:9 by default; asks first whether you want desktop, mobile 9:16 or both), plus LinkedIn, X/Twitter and Instagram posts - then run a review agent until it is ship-quality. Use when the user asks for a launch video, promo video, marketing video, product announcement, social posts for a launch, or "market this project".
 ---
 
 # Marketing launch kit
 
 ## Where the work lives
 
-Video work never goes into the project repo. The work folder is `W = ~/dev/projects/video-demos/<repo>/marketing/`, where `<repo>` is the name of the repo the skill is called from (`basename $(git rev-parse --show-toplevel)`). Create `W` if it is missing. See `~/dev/projects/video-demos/README.md` for how that tree is organised. Only the finished MP4s are copied back into the repo (see §6).
+Video work never goes into the project repo. The work folder is `W = <root>/<repo>/marketing/`, where `<repo>` is the name of the repo the skill is called from (`basename $(git rev-parse --show-toplevel)`). `<root>` is `~/dev/projects/video-demos` if that folder exists, otherwise `~/video-demos`. Create `W` if it is missing. Only the finished MP4s are copied back into the repo (see §6).
 
 `W` holds:
 
-- `launch-video/`: a Remotion project with a `LaunchWide` (1920×1080) composition. Only if the user explicitly asks for a mobile cut, add a `Launch` (1080×1920, 9:16) composition rendered from the same scenes.
-- `<slug>-launch-16x9.mp4` (plus `<slug>-launch-9x16.mp4` only on an explicit mobile request)
+- `launch-video/`: a Remotion project with the composition(s) for the chosen format (see "Choose the format"): `LaunchWide` (1920×1080) for desktop, `Launch` (1080×1920, 9:16) for mobile, both rendered from the same scenes when both are chosen.
+- `<slug>-launch-16x9.mp4` and/or `<slug>-launch-9x16.mp4`, per the chosen format
 - `posts.md`: LinkedIn, X/Twitter and Instagram copy.
 - `facts.md`: every claim used in the video and posts, each with its source.
 
 Read the repo for the analysis, but write every file above into `W`. Wherever this skill says `marketing/`, it means `W`.
+
+## Choose the format (before any video work)
+
+Ask the user once, before step 1, with a question tool or lettered options:
+
+- a. Desktop 16:9 only (default)
+- b. Mobile 9:16 only
+- c. Both
+
+Skip the question only when the request already names the format. If the user does not answer, use (a). Remember the answer as `FORMAT`: it decides which compositions you register, render, review and deliver. The posts do not depend on it.
 
 Work in this order. Do not skip the fact sheet or the review loop.
 
@@ -50,7 +60,7 @@ Keep a persistent brand lockup (icon + name, 40px) top-left on every scene betwe
 
 ## 3. Build the video
 
-Load the `remotion-best-practices` skill first; its `remotion-create` and `remotion-markup` references are the rules. Then:
+Load the `remotion-best-practices` skill first; its `remotion-create` and `remotion-markup` references are the rules. If that skill is not installed, say so and use the Remotion docs instead. Where this skill names Claude Code tools (`Agent`, `SendMessage`, `SendUserFile`), use your agent's equivalent: a subagent, a follow-up message to it, attaching the file. Then:
 
 1. Scaffold into `W/launch-video` with `npx create-video@latest --yes --blank --no-tailwind launch-video`. Pin every `@remotion/*` package to the exact `remotion` version, and add `@remotion/transitions` and `@remotion/google-fonts`.
 2. Copy `templates/theme.ts` and `templates/ui.tsx` from this skill into `src/`. They provide:
@@ -69,7 +79,7 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
    - `band`: the vertical range the visual occupies. In landscape, `Split` moves the text to a left column and centres that band on the right.
    - If an element sits under the visual in portrait but belongs in the text column in landscape, branch on `useLandscape()`.
 4. In `Launch.tsx`, lay out a `TransitionSeries` with 12–14 frame fades and slides. Put the brand card inside `<Sequence from={-44}>` so its entrance has finished by frame 0. Add a `Lockup` overlay.
-5. In `Root.tsx`, register the scenes in a `Folder`, plus `LaunchWide` at 1920×1080. Add `Launch` at 1080×1920 only on an explicit mobile request; it uses the same component and the same `TOTAL`. `TOTAL` is `TOTAL` = sum of scenes − sum of transitions.
+5. In `Root.tsx`, register the scenes in a `Folder`, plus `LaunchWide` at 1920×1080 when `FORMAT` includes desktop and `Launch` at 1080×1920 when it includes mobile; both use the same component and the same `TOTAL`. `TOTAL` is `TOTAL` = sum of scenes − sum of transitions.
 
 ### Gotchas (all hit in practice)
 
@@ -97,13 +107,13 @@ Load the `remotion-best-practices` skill first; its `remotion-create` and `remot
   ffmpeg -i out.mp4 -vf "select='eq(n\,0)+eq(n\,300)',scale=540:-1,tile=5x2" -frames:v 1 sheet.png
   ```
   Then Read the sheet.
-- **Render:** `npx remotion render LaunchWide out/<slug>-16x9.mp4 --codec=h264 --crf=14`, and the same for `Launch` (`<slug>-9x16.mp4`) only if a mobile cut was requested. Keep the finals in `W` and delete superseded renders.
+- **Render:** `npx remotion render LaunchWide out/<slug>-16x9.mp4 --codec=h264 --crf=14`, and the same for `Launch` (`<slug>-9x16.mp4`) when `FORMAT` includes mobile. Render only the chosen format(s). Keep the finals in `W` and delete superseded renders.
 
 ## 4. Write the posts (`posts.md`)
 
 Use only claims from `facts.md`. Every post covers the pain, the differentiator, 3–5 proof points, the CTA and the links.
 
-- **LinkedIn:** if a `linkedin-post` skill exists, load it and follow its voice and format. Otherwise: first person, ~150–220 words, no rhetorical-question close, a `Links` block (store and source), and exactly 3 specific hashtags. Attach the **16:9** video (or the 9:16 one if a mobile cut was requested).
+- **LinkedIn:** if a `post` skill exists, load it and follow its voice and format. Otherwise: first person, ~100–180 words, no rhetorical-question close, a `Links` block (store and source), and exactly 3 specific hashtags. Attach the **16:9** video, or the 9:16 one when only mobile was chosen.
 - **X/Twitter:**
   - Write one standalone post of ≤280 characters: a hook plus the link.
   - Then write an optional 4–6 post thread: pain, how it works, proof, privacy, CTA.
@@ -111,7 +121,7 @@ Use only claims from `facts.md`. Every post covers the pain, the differentiator,
 - **Instagram:**
   - The caption's first 125 characters are the hook, because that's all that shows before "more".
   - Keep short lines with line breaks, "Link in bio", and 5–10 niche hashtags at the end.
-  - Attach the **16:9** video, or the 9:16 one if a mobile cut was requested. A 9:16 cut works as a Reel; it still needs an explicit request.
+  - Attach the **16:9** video, or the 9:16 one when only mobile was chosen. A 9:16 cut works as a Reel, so use it there when `FORMAT` includes mobile.
 
 Match the user's own voice when they have one. Say "try it now and tell me what you think" rather than generic engagement bait.
 
@@ -131,7 +141,7 @@ For illustration or visual-design problems the reviewer or user flags, spawn a d
 
 ## 6. Deliver
 
-- Copy the final MP4s from `W` into the repo the skill was called from: `<repo>/marketing/<slug>-launch-16x9.mp4` (and `-9x16.mp4` if a mobile cut was made) (create `<repo>/marketing/` if needed). Never overwrite an existing `<repo>/demo.mp4`; that is the tutorial demo. If the repo has no `demo.mp4` and the user wants a README video, copy the 16:9 cut to `<repo>/demo.mp4` and embed it with `<video src="demo.mp4" controls muted width="100%"></video>`. `posts.md` and `facts.md` stay in `W`.
+- Copy the final MP4s from `W` into the repo the skill was called from: `<repo>/marketing/<slug>-launch-16x9.mp4` (and/or `-9x16.mp4`, per `FORMAT`) (create `<repo>/marketing/` if needed). Never overwrite an existing `<repo>/demo.mp4`; that is the tutorial demo. If the repo has no `demo.mp4` and the user wants a README video, copy the 16:9 cut to `<repo>/demo.mp4` and embed it with `<video src="demo.mp4" controls muted width="100%"></video>`. `posts.md` and `facts.md` stay in `W`.
 - Send the MP4s with SendUserFile, and show the post text inline.
 - List placeholders still to fill, such as the store link. Report the reviewer's final score and any declined fixes, each with a one-line reason.
 - Do not commit, push or publish anything unless asked. Say that the copied MP4s are uncommitted in the repo.

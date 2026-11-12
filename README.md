@@ -64,9 +64,9 @@ Four rules, verbatim, so you can judge the fit before installing:
 The plugin also bundles four skills, each loaded lazily when its description matches the request:
 
 - `polish` (`obedient-ai/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
-- `linkedin-post` (`obedient-ai/skills/linkedin-post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
-- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in a 16:9 cut (9:16 mobile cut on request), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
-- `analyze-coding-agent-logs` (`obedient-ai/skills/analyze-coding-agent-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
+- `post` (`obedient-ai/skills/post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
+- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video (it first asks desktop 16:9, mobile 9:16 or both; desktop is the default), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
+- `learn-logs` (`obedient-ai/skills/learn-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
 
 ## Other agents
 
@@ -111,12 +111,12 @@ obedient-ai/
   context/rules.md
   context/rules-opencode.md
   output-styles/obedient-mini.md
-  skills/linkedin-post/SKILL.md
+  skills/post/SKILL.md
   skills/marketing/SKILL.md
   skills/polish/SKILL.md
-  skills/analyze-coding-agent-logs/SKILL.md
-  skills/analyze-coding-agent-logs/queries/opencode.sql
-  skills/analyze-coding-agent-logs/queries/claude-code.sql
+  skills/learn-logs/SKILL.md
+  skills/learn-logs/queries/opencode.sql
+  skills/learn-logs/queries/claude-code.sql
   skills/marketing/templates/{theme.ts,ui.tsx}
 token-guard/
   .claude-plugin/plugin.json
@@ -126,13 +126,13 @@ token-guard/
 
 ## Status
 
-Version 0.23.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.24.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 
 - The session hook now asserts `context/rules.md` is non-empty. It prints the path and exits 2 instead of starting a session with no rules.
-- The `linkedin-post` skill no longer triggers on "help me write"; that phrase fired on emails, commits and docs.
-- The `linkedin-post` skill reads `~/.config/obedient-ai/voice.md` when present and uses it as the persona, falling back to the author's voice otherwise.
+- The `post` skill no longer triggers on "help me write"; that phrase fired on emails, commits and docs.
+- The `post` skill reads `~/.config/obedient-ai/voice.md` when present and uses it as the persona, falling back to the author's voice otherwise.
 - `tools/validate.sh` checks the three JSON manifests, both rules files, every context file named in `opencode/index.ts`, every path `hooks.json` runs, and that each skill's `name` matches its directory. `.github/workflows/validate.yml` runs it on push and pull request.
 - The `PLAN.md`/`TODO.md` section now applies only when the repo has one of those files.
 

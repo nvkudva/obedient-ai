@@ -1,9 +1,9 @@
 -- OpenCode adapter. Creates view `t`, then runs the six analyses.
 -- Edit the WHERE clause in `t`: pin a literal cutoff for before/after runs.
--- Usage: duckdb -box < opencode.sql
+-- Usage: sed "s|__HOME__|$HOME|" opencode.sql | duckdb -box
 
 LOAD sqlite;
-ATTACH '/Users/vijay/.local/share/opencode/opencode.db' AS oc (TYPE sqlite);
+ATTACH '__HOME__/.local/share/opencode/opencode.db' AS oc (TYPE sqlite);
 
 CREATE OR REPLACE VIEW raw_tools AS
   SELECT
