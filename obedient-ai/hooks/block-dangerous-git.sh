@@ -349,5 +349,15 @@ printf 'Command: %s\n\n' "$cmd" >&2
 printf 'This operation is irreversible or destroys uncommitted/unpushed work.\n' >&2
 printf 'If this is genuinely intended, ask the user to run it themselves, or\n' >&2
 printf 'prefix it with ALLOW_DANGEROUS_GIT=1 after they confirm.\n' >&2
-printf 'Safer alternatives: git revert, git stash, git switch -c, git restore --source=.\n' >&2
+case $reason in
+  *rebase*) hint="git merge origin/main (keeps history)" ;;
+  *amend*) hint="a new commit on top: git commit -m 'fixup: ...'" ;;
+  *"reset --"*|*restore*|*"checkout --force"*|*"switch --force"*|*"rm --force"*|*"clean -f"*) hint="git stash push -u -m '<why>' first, then run it without --force/--hard" ;;
+  *"deleting a branch"*|*"tag -d"*|*"push --delete"*|*":branch"*) hint="leave it in place and tell the user it can be deleted" ;;
+  *push*) hint="push to a new branch: git push -u origin HEAD:<new-branch>" ;;
+  *"rm "*|*"removing .git"*|*"home directory"*|*"gh "*) hint="the one named above, or ask the user" ;;
+  *) hint="git revert, git stash, git switch -c" ;;
+esac
+printf 'Safer alternative: %s\n' "$hint" >&2
+printf 'Do not retry another form of the same operation: use the alternative or ask the user.\n' >&2
 exit 2

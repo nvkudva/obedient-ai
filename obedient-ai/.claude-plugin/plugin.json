@@ -1,6 +1,26 @@
 {
   "name": "obedient-ai",
   "displayName": "Obedient AI",
-  "version": "0.21.0",
-  "description": "SessionStart hook that loads standing rules (response length, working style, delegation, session hygiene) into every session, plus a linkedin-post skill for drafting posts in Vijay's voice and a marketing skill that builds a launch video and social posts for a project."
+  "version": "0.22.0",
+  "description": "SessionStart hook that loads standing rules (response length, working style, delegation, session hygiene) into every session, plus a linkedin-post skill for drafting posts in Vijay's voice and a marketing skill that builds a launch video and social posts for a project.",
+  "userConfig": {
+    "intervalMinutes": {
+      "type": "number",
+      "title": "Idle minutes before each step",
+      "description": "Cache TTL minus a margin: 55 for the 1-hour TTL, 4 for the 5-minute TTL.",
+      "default": 55
+    },
+    "maxPings": {
+      "type": "number",
+      "title": "Keep-alive pings before compacting",
+      "description": "Pings sent while idle; the next idle step compacts.",
+      "default": 2
+    },
+    "minTokens": {
+      "type": "number",
+      "title": "Minimum context tokens",
+      "description": "Sessions smaller than this are left alone.",
+      "default": 150000
+    }
+  }
 }

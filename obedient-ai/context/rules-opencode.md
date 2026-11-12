@@ -14,8 +14,9 @@ true only in OpenCode. The loader in `opencode/index.ts` appends this file after
 - Subagents: `subagent` with `agent: "explore"` for searches over ~5 files,
   `"general"` only for work that writes files. Put the budget and return
   contract in the prompt.
-- At about 300 tool calls, write a handoff file and tell me to start a fresh
-  session. There is no `handoff` agent here.
+- Every turn re-reads the whole session. When a task is done, or at about 150
+  responses, write a handoff file and tell me to start a fresh session. There is
+  no `handoff` agent here.
 - Browser control lives under the `browser` namespace. Read the page as text
   before taking a screenshot; screenshots are the biggest context cost.
 

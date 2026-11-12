@@ -44,5 +44,8 @@
         ]
       }
     ]
-  }
+  },
+  "modules": [
+    "./cacheKeeper.ts"
+  ]
 }
