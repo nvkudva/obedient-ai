@@ -14,17 +14,22 @@ const contextRoot = join(pluginRoot, "context");
 const skillsRoot = join(pluginRoot, "skills");
 
 // Injected in this order at the front of every session's system prompt.
-const contextFiles = ["rules.md", "rules-opencode.md"];
+// obedient-mini.md is also a Claude Code output style; here its body is injected as plain rules.
+const contextFiles = [
+  join(contextRoot, "rules.md"),
+  join(pluginRoot, "output-styles", "obedient-mini.md"),
+  join(contextRoot, "rules-opencode.md"),
+];
 
 async function readContext() {
   const parts = [];
-  for (const name of contextFiles) {
+  for (const path of contextFiles) {
     try {
-      parts.push(await readFile(join(contextRoot, name), "utf8"));
+      parts.push(parseFrontmatter(await readFile(path, "utf8")).body.trim());
     } catch {
       // A missing context file is not fatal, but it must not be silent: the
       // session would look normal while running without its rules.
-      console.warn(`obedient-ai: missing context file ${name}`);
+      console.warn(`obedient-ai: missing context file ${path}`);
     }
   }
   return parts.join("\n\n");

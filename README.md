@@ -44,9 +44,9 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 - `PreToolUse:Bash`: `prefer-fast-tools.sh` blocks `pip install` when `uv` is installed. Bypass with `ALLOW_SLOW_TOOL=1`.
 - `modules`: `hooks/cacheKeeper.ts` is a keep-alive. After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Set the three values in the plugin's user config; raise `minTokens` very high to effectively disable it.
 
-There is no per-project override. `obedient-ai/output-styles/Minimal-Custom.md` is an output style you select yourself with `/output-style`; it is not applied automatically.
+There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `obedient-ai/output-styles/obedient-mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
 
-The rules payload is `obedient-ai/context/rules.md`, 142 lines under ten headings: working style, writing code, code style, coding style, reading and searching, delegation, `PLAN.md`/`TODO.md`, session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
+The rules payload is `obedient-ai/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, `PLAN.md`/`TODO.md`, session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
 OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
@@ -67,6 +67,16 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 - `linkedin-post` (`obedient-ai/skills/linkedin-post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
 - `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video in a 16:9 cut (9:16 mobile cut on request), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
 - `analyze-coding-agent-logs` (`obedient-ai/skills/analyze-coding-agent-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
+
+## Other agents
+
+| Agent | Rules | Skills | Guard hooks, cacheKeeper, token-guard |
+|---|---|---|---|
+| Claude Code | yes | yes | yes |
+| OpenCode | yes, via `opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
+| pi | concatenate `rules.md` and the body of `output-styles/obedient-mini.md` into `~/.pi/agent/APPEND_SYSTEM.md` (per pi docs; not tested) | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` (per pi docs; not tested) | no |
+
+The hooks and the keep-alive use Claude Code's hook and mod APIs, so they do not port. In other agents the git, sleep and `pip` rules in `rules.md` are advice only. `rules.md` names some Claude Code tools (`run_in_background`, Monitor, ToolSearch, `old_string`); `rules-opencode.md` maps them for OpenCode, and pi has no equivalent file yet.
 
 ## token-guard
 
@@ -98,9 +108,9 @@ obedient-ai/
   hooks/cacheKeeper.ts
   setup.sh
   claude-settings.json
-  output-styles/Minimal-Custom.md
   context/rules.md
   context/rules-opencode.md
+  output-styles/obedient-mini.md
   skills/linkedin-post/SKILL.md
   skills/marketing/SKILL.md
   skills/polish/SKILL.md
@@ -116,7 +126,7 @@ token-guard/
 
 ## Status
 
-Version 0.22.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.23.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 

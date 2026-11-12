@@ -17,7 +17,7 @@ for f in obedient-ai/context/rules.md obedient-ai/context/rules-opencode.md; do
 done
 
 for name in $(grep -o '"[a-z-]*\.md"' opencode/index.ts | tr -d '"'); do
-  if [ -s "obedient-ai/context/$name" ]; then ok "context/$name exists"; else bad "context/$name named in opencode/index.ts but missing"; fi
+  if [ -s "obedient-ai/context/$name" ] || [ -s "obedient-ai/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in opencode/index.ts but missing"; fi
 done
 
 for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' obedient-ai/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do

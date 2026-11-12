@@ -10,9 +10,7 @@
 - Delete directories with `trash <path>`. `rm -rf` only on absolute paths inside
   /tmp, the scratchpad or `$TMPDIR`. No rebase, amend or history rewrite unless I
   ask for it.
-- Communicate in the active caveman mode: terse, answer first, fragments allowed.
-  Code, commands, paths and technical names stay exact. Accuracy beats brevity:
-  if a rule would drop or blur a technical detail, keep the detail.
+- Be terse and answer first.
 
 ## Writing code
 

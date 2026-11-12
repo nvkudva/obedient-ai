@@ -1,14 +1,19 @@
 {
   "name": "obedient-ai",
-  "version": "0.22.0",
+  "version": "0.23.0",
   "description": "Injects standing rules into every OpenCode session and ships the linkedin-post, marketing, and polish skills.",
   "type": "module",
+  "keywords": ["pi-package"],
+  "pi": {
+    "skills": ["./obedient-ai/skills"]
+  },
   "exports": {
     ".": "./opencode/index.ts"
   },
   "files": [
     "opencode",
     "obedient-ai/context",
+    "obedient-ai/output-styles",
     "obedient-ai/skills"
   ],
   "dependencies": {
