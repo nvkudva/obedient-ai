@@ -1,5 +1,5 @@
 ---
-name: obedient-mini
+name: mini
 description: Short numbered bullets in simple words, with a superscript number on every point and lettered options, so you can reply with just the number.
 keep-coding-instructions: true
 ---

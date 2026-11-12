@@ -14,10 +14,10 @@ const contextRoot = join(pluginRoot, "context");
 const skillsRoot = join(pluginRoot, "skills");
 
 // Injected in this order at the front of every session's system prompt.
-// obedient-mini.md is also a Claude Code output style; here its body is injected as plain rules.
+// mini.md is also a Claude Code output style; here its body is injected as plain rules.
 const contextFiles = [
   join(contextRoot, "rules.md"),
-  join(pluginRoot, "output-styles", "obedient-mini.md"),
+  join(pluginRoot, "output-styles", "mini.md"),
   join(contextRoot, "rules-opencode.md"),
 ];
 
