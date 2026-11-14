@@ -89,6 +89,7 @@ A second plugin in this marketplace: a Claude Code mod that warns before a sessi
 - `Read` of a PNG or JPEG over 300 KB is downscaled with `sips -Z 1200` (macOS) and the smaller copy is read.
 - `Read` of an unchanged file already read this session is denied; a changed modification time allows it. Passing `offset` or `limit` always allows it.
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
+- The same tool error (digits ignored) three times in one turn appends a note to the third result telling the model to stop retrying and say what it tried. Once per turn, never blocks.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
 - `/guard` prints the counters and the transcripts folder size.
 

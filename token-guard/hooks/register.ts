@@ -17,44 +17,56 @@ const CONTINUE_HERE = 'Continue here'
 const START_FRESH = 'Start fresh (/clear, resend prompt)'
 const COMPACT_FIRST = 'Compact first, then send'
 
+const SAME_FAILURE_LIMIT = 3
+const ERROR_KEY_LENGTH = 120
+
+// Agents vary the command but the error stays the same, so the key is the error's first meaningful line.
+export const normalizeError = (text: string) => {
+  const meaningfulLine = text.split('\n').find(line => line.trim() !== '' && !/^exit code \d+$/i.test(line.trim()))
+  return (meaningfulLine ?? text).toLowerCase().replace(/0x[0-9a-f]+|\d+/g, '#').replace(/\s+/g, ' ').trim().slice(0, ERROR_KEY_LENGTH)
+}
+
+// State and helpers sit at module level: the loader only follows `$` into top-level functions.
+let turns = 0
+let calls = 0
+let hasWarnedTurns = false
+let hasWarnedCalls = false
+let lastRequestAt = 0
+let stopTicker: (() => void) | undefined
+const stats = { duplicateReadsBlocked: 0, imagesDownscaled: 0, readsCapped: 0, repeatBash: 0, patchHelpers: 0, failureLoops: 0 }
+const readMtimes = new Map<string, number>()
+const bashCommands = new Set<string>()
+const recentPrompts: string[] = []
+const failureCounts = new Map<string, number>()
+let hasRedirectedThisTurn = false
+
+const isUnrelatedTopic = async ($: EngineInterface, text: string, contextTokens: number) => {
+  if (recentPrompts.length === 0 || text.length < TOPIC_CHECK_MIN_CHARS || contextTokens < TOPIC_CHECK_MIN_TOKENS) {
+    return false
+  }
+  const history = recentPrompts.map(prompt => `- ${prompt}`).join('\n')
+  const question = `Earlier requests in this coding session:\n${history}\n\nNew request:\n${text}\n\nDoes the new request continue the earlier work, or start an unrelated task?`
+  const label = await $.model.classify(question, ['continues', 'unrelated']).catch(() => undefined)
+  return label === 'unrelated'
+}
+const rememberPrompt = (text: string) => {
+  recentPrompts.push(text.slice(0, 500))
+  if (recentPrompts.length > RECENT_PROMPTS_KEPT) recentPrompts.shift()
+}
+
+const showStatus = async ($: EngineInterface) => {
+  const { context } = await $.session.usage()
+  const trimmed = Object.values(stats).reduce((sum, count) => sum + count, 0)
+  const left = lastRequestAt === 0 ? 0 : Math.max(0, lastRequestAt + CACHE_TTL_MS - (await $.clock.now()))
+  const cache = left === 0 ? 'cache cold' : `cache ${Math.floor(left / 60_000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`
+  $.ui.status(`◆ ctx ${context.percent ?? '?'}% · ${cache} · ${turns}t ${calls}c · ${trimmed} trimmed`)
+}
+const touch = async ($: EngineInterface) => {
+  lastRequestAt = await $.clock.now()
+  await showStatus($)
+}
+
 export const register: Register = on => {
-  let turns = 0
-  let calls = 0
-  let hasWarnedTurns = false
-  let hasWarnedCalls = false
-  let lastRequestAt = 0
-  let stopTicker: (() => void) | undefined
-  const stats = { duplicateReadsBlocked: 0, imagesDownscaled: 0, readsCapped: 0, repeatBash: 0, patchHelpers: 0 }
-  const readMtimes = new Map<string, number>()
-  const bashCommands = new Set<string>()
-  const recentPrompts: string[] = []
-
-  const isUnrelatedTopic = async ($: EngineInterface, text: string, contextTokens: number) => {
-    if (recentPrompts.length === 0 || text.length < TOPIC_CHECK_MIN_CHARS || contextTokens < TOPIC_CHECK_MIN_TOKENS) {
-      return false
-    }
-    const history = recentPrompts.map(prompt => `- ${prompt}`).join('\n')
-    const question = `Earlier requests in this coding session:\n${history}\n\nNew request:\n${text}\n\nDoes the new request continue the earlier work, or start an unrelated task?`
-    const label = await $.model.classify(question, ['continues', 'unrelated']).catch(() => undefined)
-    return label === 'unrelated'
-  }
-  const rememberPrompt = (text: string) => {
-    recentPrompts.push(text.slice(0, 500))
-    if (recentPrompts.length > RECENT_PROMPTS_KEPT) recentPrompts.shift()
-  }
-
-  const showStatus = async ($: EngineInterface) => {
-    const { context } = await $.session.usage()
-    const trimmed = Object.values(stats).reduce((sum, count) => sum + count, 0)
-    const left = lastRequestAt === 0 ? 0 : Math.max(0, lastRequestAt + CACHE_TTL_MS - (await $.clock.now()))
-    const cache = left === 0 ? 'cache cold' : `cache ${Math.floor(left / 60_000)}:${String(Math.floor(left / 1000) % 60).padStart(2, '0')}`
-    $.ui.status(`◆ ctx ${context.percent ?? '?'}% · ${cache} · ${turns}t ${calls}c · ${trimmed} trimmed`)
-  }
-  const touch = async ($: EngineInterface) => {
-    lastRequestAt = await $.clock.now()
-    await showStatus($)
-  }
-
   on('session.start', async ($, e, next) => {
     stopTicker?.()
     stopTicker = $.clock.every(15_000, () => void showStatus($))
@@ -69,7 +81,7 @@ export const register: Register = on => {
       text: [
         `turns ${turns} (warn at ${MAX_TURNS}) · calls ${calls} (warn at ${MAX_CALLS})`,
         `duplicate Reads blocked ${stats.duplicateReadsBlocked} · images downscaled ${stats.imagesDownscaled} · Reads capped ${stats.readsCapped}`,
-        `repeat Bash ${stats.repeatBash} · inline patch helpers ${stats.patchHelpers}`,
+        `repeat Bash ${stats.repeatBash} · inline patch helpers ${stats.patchHelpers} · failure loops ${stats.failureLoops}`,
         `transcripts: ${stdout.split('\t')[0]}`,
       ].join('\n'),
     }
@@ -111,12 +123,34 @@ export const register: Register = on => {
     return next(e)
   })
 
-  on('tool.call', ($, e, next) => {
+  on('tool.call', async ($, e, next) => {
     calls += 1
     void touch($)
     if (calls >= MAX_CALLS && !hasWarnedCalls) {
       hasWarnedCalls = true
       $.ui.toast(`${calls} tool calls: write a handoff and start a fresh session`)
+    }
+
+    // The same error three times in one turn: tell the model to stop retrying. Never blocks.
+    const result = await next(e)
+    if (e.agentId !== undefined || result.isError !== true || result.text === undefined) return result
+
+    const errorKey = normalizeError(result.text)
+    const failureCount = (failureCounts.get(errorKey) ?? 0) + 1
+    failureCounts.set(errorKey, failureCount)
+    if (failureCount < SAME_FAILURE_LIMIT || hasRedirectedThisTurn) return result
+
+    hasRedirectedThisTurn = true
+    stats.failureLoops += 1
+    $.ui.toast(`Same error ${failureCount} times: told the model to stop and report`)
+    const redirect = `token-guard: this error has now failed ${failureCount} times this turn ("${errorKey}"). Do not retry it again. Stop and tell the user what you tried and what you think is wrong.`
+    return { ...result, context: [...(result.context ?? []), redirect] }
+  })
+
+  on('turn.start', (_, e, next) => {
+    if (e.agentId === undefined) {
+      failureCounts.clear()
+      hasRedirectedThisTurn = false
     }
     return next(e)
   })
