@@ -1,6 +1,6 @@
 {
   "name": "obedient-ai",
-  "version": "0.24.1",
+  "version": "0.25.0",
   "description": "Injects standing rules into every OpenCode session and ships the post, marketing, and polish skills.",
   "type": "module",
   "keywords": ["pi-package"],
