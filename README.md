@@ -73,10 +73,11 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 | Agent | Rules | Skills | Guard hooks, cacheKeeper, token-guard |
 |---|---|---|---|
 | Claude Code | yes | yes | yes |
+| Antigravity | yes, via `antigravity/rules/AGENTS.md` (run `agy plugin install ./antigravity`) | yes (`antigravity/skills` → `obedient-ai/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
 | OpenCode | yes, via `opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
-| pi | concatenate `rules.md` and the body of `output-styles/mini.md` into `~/.pi/agent/APPEND_SYSTEM.md` (per pi docs; not tested) | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` (per pi docs; not tested) | no |
+| pi | copy or symlink `pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
 
-The hooks and the keep-alive use Claude Code's hook and mod APIs, so they do not port. In other agents the git, sleep and `pip` rules in `rules.md` are advice only. `rules.md` names some Claude Code tools (`run_in_background`, Monitor, ToolSearch, `old_string`); `rules-opencode.md` maps them for OpenCode, and pi has no equivalent file yet.
+Run `./tools/sync-targets.sh` after editing `obedient-ai/context/` or `obedient-ai/output-styles/mini.md` to regenerate `antigravity/rules/AGENTS.md` and `pi/APPEND_SYSTEM.md`. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
 
 ## token-guard
 

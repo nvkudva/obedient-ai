@@ -320,35 +320,22 @@ check_cmd() {
 
 [[ ${BASH_SOURCE[0]} != "$0" ]] && return 0
 
-IFS= read -r -d '' payload
+# shellcheck source=_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
+parse_hook_payload
 
-re_auto='"permission_mode"[[:space:]]*:[[:space:]]*"auto"'
-[[ $payload =~ $re_auto ]] && exit 0
-
-# Extract .tool_input.command — prefer jq, fall back to python3.
-if command -v jq >/dev/null 2>&1; then
-  cmd=$(jq -r '.tool_input.command // empty' <<< "$payload" 2>/dev/null)
-else
-  cmd=$(python3 -c \
-    'import json,sys
-try: print(json.load(sys.stdin).get("tool_input",{}).get("command","") or "")
-except Exception: print("")' <<< "$payload" 2>/dev/null)
-fi
+[ "$HOOK_AUTO" = "true" ] && emit_allow
+cmd=$HOOK_CMD
 
 # Nothing to inspect -> allow (never break the session on a parse failure).
-[ -z "${cmd:-}" ] && exit 0
+[ -z "${cmd:-}" ] && emit_allow
 
 case "$cmd" in
-  *ALLOW_DANGEROUS_GIT=1*) exit 0 ;;
+  *ALLOW_DANGEROUS_GIT=1*) emit_allow ;;
 esac
 
-check_cmd "$cmd" && exit 0
+check_cmd "$cmd" && emit_allow
 
-printf 'BLOCKED by block-dangerous-git.sh: %s\n\n' "$reason" >&2
-printf 'Command: %s\n\n' "$cmd" >&2
-printf 'This operation is irreversible or destroys uncommitted/unpushed work.\n' >&2
-printf 'If this is genuinely intended, ask the user to run it themselves, or\n' >&2
-printf 'prefix it with ALLOW_DANGEROUS_GIT=1 after they confirm.\n' >&2
 case $reason in
   *rebase*) hint="git merge origin/main (keeps history)" ;;
   *amend*) hint="a new commit on top: git commit -m 'fixup: ...'" ;;
@@ -358,6 +345,5 @@ case $reason in
   *"rm "*|*"removing .git"*|*"home directory"*|*"gh "*) hint="the one named above, or ask the user" ;;
   *) hint="git revert, git stash, git switch -c" ;;
 esac
-printf 'Safer alternative: %s\n' "$hint" >&2
-printf 'Do not retry another form of the same operation: use the alternative or ask the user.\n' >&2
-exit 2
+msg=$(printf 'BLOCKED by block-dangerous-git.sh: %s\n\nCommand: %s\n\nThis operation is irreversible or destroys uncommitted/unpushed work.\nIf this is genuinely intended, ask the user to run it themselves, or\nprefix it with ALLOW_DANGEROUS_GIT=1 after they confirm.\nSafer alternative: %s\nDo not retry another form of the same operation: use the alternative or ask the user.' "$reason" "$cmd" "$hint")
+emit_deny "$msg"

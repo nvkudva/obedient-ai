@@ -9,33 +9,27 @@
 # Protocol: same as block-dangerous-git.sh (exit 0 allow, exit 2 block + stderr reason).
 # Escape hatch: put ALLOW_SLOW_TOOL=1 in the command when pip itself is required.
 
-command -v uv >/dev/null 2>&1 || exit 0
+# shellcheck source=_common.sh
+source "$(dirname "${BASH_SOURCE[0]}")/_common.sh"
 
-IFS= read -r -d '' payload
-
-if command -v jq >/dev/null 2>&1; then
-  cmd=$(jq -r '.tool_input.command // empty' <<< "$payload" 2>/dev/null)
-else
-  cmd=$(python3 -c \
-    'import json,sys
-try: print(json.load(sys.stdin).get("tool_input",{}).get("command","") or "")
-except Exception: print("")' <<< "$payload" 2>/dev/null)
+if ! command -v uv >/dev/null 2>&1; then
+  parse_hook_payload
+  emit_allow
 fi
 
-[ -z "${cmd:-}" ] && exit 0
+parse_hook_payload
+cmd=$HOOK_CMD
+
+[ -z "${cmd:-}" ] && emit_allow
 
 case $cmd in
-  *ALLOW_SLOW_TOOL=1*) exit 0 ;;
+  *ALLOW_SLOW_TOOL=1*) emit_allow ;;
 esac
 
 # pip at command position: start, after ; & | ( or a newline, or after then/do.
 nl=$'\n'
 re="(^|[;&|(${nl}]|[[:space:]]then|[[:space:]]do)[[:space:]]*(sudo[[:space:]]+)?(python3?[[:space:]]+-m[[:space:]]+)?pip3?[[:space:]]+install([[:space:]]|\$)"
-[[ $cmd =~ $re ]] || exit 0
+[[ $cmd =~ $re ]] || emit_allow
 
-printf 'BLOCKED by prefer-fast-tools.sh: use uv instead of pip install (10-100x faster):\n' >&2
-printf '  uv pip install <pkg>                      inside a venv\n' >&2
-printf '  uv run --with <pkg> python script.py      for a one-off script\n\n' >&2
-printf 'Command: %s\n\n' "$cmd" >&2
-printf 'If pip itself is required, add ALLOW_SLOW_TOOL=1 to the command.\n' >&2
-exit 2
+msg=$(printf 'BLOCKED by prefer-fast-tools.sh: use uv instead of pip install (10-100x faster):\n  uv pip install <pkg>                      inside a venv\n  uv run --with <pkg> python script.py      for a one-off script\n\nCommand: %s\n\nIf pip itself is required, add ALLOW_SLOW_TOOL=1 to the command.' "$cmd")
+emit_deny "$msg"

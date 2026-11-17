@@ -1,0 +1,1 @@
+../../obedient-ai/hooks/prefer-fast-tools.sh

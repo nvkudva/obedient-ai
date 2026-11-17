@@ -1,0 +1,1 @@
+../../obedient-ai/hooks/block-dangerous-git.sh
