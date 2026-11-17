@@ -32,9 +32,9 @@ mkdir -p antigravity/rules pi
   strip_frontmatter obedient-ai/output-styles/mini.md
 } > pi/APPEND_SYSTEM.md
 
-rm -rf antigravity/hooks
+rm -rf antigravity/hooks antigravity/skills
 mkdir -p antigravity/hooks
 for f in _common.sh block-dangerous-git.sh block-sleep.sh prefer-fast-tools.sh; do
-  ln -sfn "../../obedient-ai/hooks/$f" "antigravity/hooks/$f"
+  cp "obedient-ai/hooks/$f" "antigravity/hooks/$f"
 done
-ln -sfn ../obedient-ai/skills antigravity/skills
+cp -R obedient-ai/skills antigravity/skills

@@ -16,6 +16,11 @@ for f in obedient-ai/context/rules.md obedient-ai/context/rules-opencode.md obed
   if [ -s "$f" ]; then ok "$f non-empty"; else bad "$f missing or empty"; fi
 done
 
+for f in _common.sh block-dangerous-git.sh block-sleep.sh prefer-fast-tools.sh; do
+  if cmp -s "obedient-ai/hooks/$f" "antigravity/hooks/$f"; then ok "antigravity/hooks/$f in sync"; else bad "antigravity/hooks/$f out of sync (run tools/sync-targets.sh)"; fi
+done
+if diff -rq obedient-ai/skills antigravity/skills >/dev/null 2>&1; then ok "antigravity/skills in sync"; else bad "antigravity/skills out of sync (run tools/sync-targets.sh)"; fi
+
 for name in $(grep -o '"[a-z-]*\.md"' opencode/index.ts | tr -d '"'); do
   if [ -s "obedient-ai/context/$name" ] || [ -s "obedient-ai/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in opencode/index.ts but missing"; fi
 done
