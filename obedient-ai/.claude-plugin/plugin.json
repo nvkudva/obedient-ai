@@ -1,7 +1,7 @@
 {
   "name": "obedient-ai",
   "displayName": "Obedient AI",
-  "version": "0.25.0",
+  "version": "0.26.0",
   "description": "Loads standing rules (working style, code style, delegation, session hygiene) into every session, guards against dangerous git, foreground sleeps and pip install, keeps the prompt cache warm, and ships the polish, analyze-coding-agent-logs, post and marketing skills.",
   "userConfig": {
     "intervalMinutes": {

@@ -46,7 +46,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `obedient-ai/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-ai:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
 
-The rules payload is `obedient-ai/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, `PLAN.md`/`TODO.md`, session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
+The rules payload is `obedient-ai/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
 OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 

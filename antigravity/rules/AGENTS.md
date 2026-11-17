@@ -94,10 +94,19 @@
 Report at most: what changed, what broke, what's left. One line each.
 Findings I must act on go in a bulleted list, max one line per finding.
 
-## PLAN.md and TODO.md
+## Project memory: AGENTS.md, PLAN.md, TODO.md
 
-Applies only when the repo has a `PLAN.md` or `TODO.md`. Never create either file unasked.
-
+- `AGENTS.md` is the stable map: build, test and run commands, a feature-to-files
+  map, conventions, and gotchas. Under ~150 lines. No task state.
+- A repo's `CLAUDE.md` is one line, `@AGENTS.md`, plus Claude-only lines. Never
+  duplicate content between them.
+- New repo you scaffold: create all three files up front.
+- Existing repo without them: finish the task first, then ask me once whether to
+  add them. If yes, write `AGENTS.md` from what you already read this task, with
+  no extra exploration. Create `PLAN.md` or `TODO.md` only if decisions or open
+  work came up. If no, don't ask again in that repo.
+- End of every task: tick TODO, append new decisions to PLAN, add new gotchas or
+  map entries to `AGENTS.md`.
 - `PLAN.md` holds architecture, decisions, constraints, and rejected alternatives
   with the reason in concise statements. It never holds task state.
 - `TODO.md` is the only file tracking progress. Flat checklist, one line per task,
