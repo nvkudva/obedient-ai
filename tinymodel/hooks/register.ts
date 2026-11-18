@@ -1,0 +1,342 @@
+import type { EngineInterface, Register } from 'claude-code'
+import * as router from './router'
+import * as project from './project'
+
+const COMMIT_SYSTEM = 'You write git commit messages in Conventional Commits form. Reply with the message only: a title under 72 characters, then optionally a blank line and up to 3 short bullet lines.'
+const HUMAN_ORIGINS = new Set(['composer', 'bridge', 'sdk'])
+const MAX_DIFF_CHARS = 12_000
+const MAX_OUTPUT_TAIL = 4_000
+const RUN_WAIT_MS = 4_000
+const RUN_POLL_MS = 250
+const STOP_WAIT_MS = 2_000
+// npm, vite and esbuild each fork; killing only the top pid leaves the server holding its port.
+const KILL_TREE = 'kill_tree() { for child in $(pgrep -P "$1"); do kill_tree "$child"; done; kill "$1" 2>/dev/null; }; kill_tree "$1"'
+const TEST_TIMEOUT_MS = 10 * 60_000
+const DEPLOY_TIMEOUT_MS = 10 * 60_000
+const SECRET_FILE = /(^|\/)(\.env(\.[^/]*)?|[^/]*\.(pem|key|p12|pfx)|id_(rsa|ed25519)[^/]*|[^/]*(credential|secret)[^/]*)$/i
+const SAFE_SAMPLE = /\.(example|sample|template)$/i
+const LOCAL_URL = /https?:\/\/(localhost|127\.0\.0\.1|0\.0\.0\.0|\[::\])[^\s"'\x1b]*/
+
+// Main-model cost of one such prompt in your past sessions (median-ish averages from tools/history.ts).
+const PAST_TURN_COST: Record<router.Action, { usd: number; seconds: number }> = {
+  commit: { usd: 0.72, seconds: 56 }, merge: { usd: 0.83, seconds: 84 }, push: { usd: 0.86, seconds: 64 },
+  test: { usd: 1.86, seconds: 112 }, deploy: { usd: 0.76, seconds: 136 }, run: { usd: 1.56, seconds: 168 },
+  // shortcut: pull, stop and restart were too rare to measure (about 22 prompts); borrowed from push and run.
+  pull: { usd: 0.86, seconds: 64 }, stop: { usd: 0.86, seconds: 64 }, restart: { usd: 1.56, seconds: 168 },
+}
+
+type Outcome = { summary: string; mergedInto?: string } | { handoff: string }
+type RunRecord = { pid: string; command: string; url?: string; logPath: string }
+type MessageTiming = { model: string; ms: number }
+type Stats = { prompts: number; byAction: Partial<Record<router.Action, number>>; usd: number; seconds: number; messageTimes?: Record<string, { ms: number; count: number }> }
+
+let doneThisPrompt: string[] = []
+let learningAction: project.ProjectAction | undefined
+let cwd = '.'
+let sessionId = 'unknown'
+
+const tail = (text: string) => (text.length > MAX_OUTPUT_TAIL ? `…${text.slice(-MAX_OUTPUT_TAIL)}` : text)
+const tinymodelDir = async ($: EngineInterface) => `${(await $.env.get('HOME')) ?? '~'}/.claude/tinymodel`
+const learnedPath = async ($: EngineInterface) => `${await tinymodelDir($)}/learned.json`
+const notesKey = () => `notes:${sessionId}`
+
+const readJson = async ($: EngineInterface, path: string) => {
+  const text = await $.fs.read(path).catch(() => undefined)
+  try {
+    return text === undefined ? {} : JSON.parse(text)
+  } catch {
+    return {}
+  }
+}
+
+const takeNotes = async ($: EngineInterface) => {
+  const notes = ((await $.store.get(notesKey())) as string[] | undefined) ?? []
+  if (notes.length) await $.store.delete(notesKey())
+  return notes
+}
+const addNotes = async ($: EngineInterface, notes: string[]) => {
+  const kept = ((await $.store.get(notesKey())) as string[] | undefined) ?? []
+  await $.store.set(notesKey(), [...kept, ...notes])
+}
+
+const recordStats = async ($: EngineInterface, actions: router.Action[], timing?: MessageTiming) => {
+  const stats = ((await $.store.get('stats')) as Stats | undefined) ?? { prompts: 0, byAction: {}, usd: 0, seconds: 0 }
+  // One handled prompt replaced one main-model turn, so count its costliest action, not the sum.
+  const costliest = actions.map(action => PAST_TURN_COST[action]).sort((a, b) => b.usd - a.usd)[0]
+  stats.prompts += 1
+  stats.usd += costliest?.usd ?? 0
+  stats.seconds += costliest?.seconds ?? 0
+  for (const action of actions) stats.byAction[action] = (stats.byAction[action] ?? 0) + 1
+  if (timing) {
+    const times = (stats.messageTimes ??= {})
+    const kept = times[timing.model] ?? { ms: 0, count: 0 }
+    times[timing.model] = { ms: kept.ms + timing.ms, count: kept.count + 1 }
+  }
+  await $.store.set('stats', stats)
+}
+
+const statsReport = (stats: Stats | undefined) => {
+  if (!stats || stats.prompts === 0) return 'tinymodel has not handled a prompt yet.'
+  const actions = Object.entries(stats.byAction).map(([action, count]) => `${action} ${count}`).join(', ')
+  const averages = Object.entries(stats.messageTimes ?? {}).map(([model, time]) => `${model} ${Math.round(time.ms / time.count)} ms (${time.count})`)
+  const messageAverage = averages.length ? `. Commit messages: ${averages.join(', ')}` : ''
+  return `tinymodel handled ${stats.prompts} prompts (${actions}). Estimated main-model turns avoided: ~$${stats.usd.toFixed(2)} and ~${Math.round(stats.seconds / 60)} min${messageAverage}.`
+}
+
+const loadProject = async ($: EngineInterface): Promise<project.Project> => {
+  const entries = await $.fs.list(cwd).catch(() => [])
+  const files = new Set(entries.map(entry => entry.name))
+  const learned = await readJson($, await learnedPath($))
+  return {
+    files,
+    packageJson: files.has('package.json') ? await $.fs.read(`${cwd}/package.json`) : undefined,
+    config: await readJson($, `${cwd}/.claude/tinymodel.json`),
+    learned: learned[cwd] ?? {},
+  }
+}
+
+const remember = async ($: EngineInterface, action: project.ProjectAction, command: string) => {
+  const path = await learnedPath($)
+  const learned = await readJson($, path)
+  learned[cwd] = { ...learned[cwd], [action]: command }
+  await $.fs.write(path, JSON.stringify(learned, null, 2))
+}
+
+// Through sh, because $.process.run turns repo hooks off for a direct git call; pre-commit and pre-push must run.
+const git = ($: EngineInterface, ...args: string[]) => $.process.run(['sh', '-c', 'exec git "$@"', 'git', ...args], { cwd })
+const shell = ($: EngineInterface, command: string, timeoutMs: number) =>
+  $.process.run(['sh', '-c', command], { cwd, timeoutMs })
+const isAlive = async ($: EngineInterface, pid: string) => (await $.process.run(['kill', '-0', pid])).exitCode === 0
+const currentBranch = async ($: EngineInterface) => (await git($, 'rev-parse', '--abbrev-ref', 'HEAD')).stdout.trim()
+
+const commitMessage = async ($: EngineInterface, model: string, diff: string) => {
+  const startedAt = await $.clock.now()
+  const prompt = `Write the commit message for this staged diff:\n\n${diff}`
+  const reply = await $.model.complete({ model, effort: 'low', maxTokens: 200, timeoutMs: 15_000, system: COMMIT_SYSTEM, prompt })
+  const message = reply.isAnswered ? reply.text.trim() || undefined : undefined
+  return { message, timing: { model, ms: (await $.clock.now()) - startedAt } }
+}
+
+const commit = async ($: EngineInterface, model: string, timings: MessageTiming[]): Promise<Outcome> => {
+  await git($, 'add', '-A')
+  const staged = (await git($, 'diff', '--cached', '--name-only')).stdout.split('\n').filter(Boolean)
+  if (staged.length === 0) return { summary: 'nothing to commit' }
+  const secrets = staged.filter(path => SECRET_FILE.test(path) && !SAFE_SAMPLE.test(path))
+  if (secrets.length) {
+    await $.process.run(['sh', '-c', 'exec git "$@"', 'git', 'reset', '-q', '--', ...secrets], { cwd })
+    return { handoff: `staged changes include files that look like secrets (${secrets.join(', ')}). tinymodel unstaged them and did not commit; ask the user before committing them or add them to .gitignore.` }
+  }
+  const stat = (await git($, 'diff', '--cached', '--stat')).stdout
+  const diff = (await git($, 'diff', '--cached')).stdout.slice(0, MAX_DIFF_CHARS)
+  const { message, timing } = await commitMessage($, model, `${stat}\n${diff}`)
+  timings.push(timing)
+  if (!message) return { handoff: 'the commit message model gave no answer; changes are staged, write the message and commit.' }
+  const result = await git($, 'commit', '-m', message)
+  if (result.exitCode !== 0) return { handoff: `git commit failed:\n${tail(result.stdout + result.stderr)}` }
+  const hash = (await git($, 'rev-parse', '--short', 'HEAD')).stdout.trim()
+  return { summary: `committed ${hash} "${message.split('\n')[0]}" (message by ${timing.model}, ${Math.round(timing.ms)} ms)` }
+}
+
+const defaultBranch = async ($: EngineInterface) => {
+  const originHead = (await git($, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD')).stdout.trim()
+  if (originHead) return originHead.replace(/^origin\//, '')
+  for (const name of ['main', 'master']) {
+    if ((await git($, 'rev-parse', '--verify', '-q', `refs/heads/${name}`)).exitCode === 0) return name
+  }
+  return undefined
+}
+
+const worktreeOf = async ($: EngineInterface, branch: string) => {
+  const blocks = (await git($, 'worktree', 'list', '--porcelain')).stdout.split('\n\n')
+  const block = blocks.find(lines => lines.split('\n').includes(`branch refs/heads/${branch}`))
+  return block?.match(/^worktree (.+)$/m)?.[1]
+}
+
+// Fast-forward only: anything that needs a real merge or a rebase is the main model's job.
+const merge = async ($: EngineInterface): Promise<Outcome> => {
+  const target = await defaultBranch($)
+  const source = await currentBranch($)
+  if (!target) return { handoff: 'no main or master branch found to merge into.' }
+  if (source === target || source === 'HEAD') return { handoff: `already on ${target}; the user did not say which branch to merge.` }
+  const worktree = await worktreeOf($, target)
+  // A branch checked out in another worktree (T3, `git worktree`) can only move there.
+  const result = worktree ? await git($, '-C', worktree, 'merge', '--ff-only', source) : await git($, 'fetch', '.', `${source}:${target}`)
+  if (result.exitCode !== 0) {
+    return { handoff: `fast-forward merge of ${source} into ${target} failed (${target} has moved on, or its worktree has conflicting changes):\n${tail(result.stderr)}` }
+  }
+  return { summary: `merged ${source} into ${target}`, mergedInto: target }
+}
+
+const push = async ($: EngineInterface, branch: string | undefined): Promise<Outcome> => {
+  const pushed = branch ?? (await currentBranch($))
+  let result = branch ? await git($, 'push', 'origin', branch) : await git($, 'push')
+  if (result.exitCode !== 0 && /no upstream|set-upstream/.test(result.stderr)) result = await git($, 'push', '-u', 'origin', 'HEAD')
+  if (result.exitCode !== 0) return { handoff: `git push failed:\n${tail(result.stderr)}` }
+  return { summary: `pushed ${pushed}` }
+}
+
+const test = async ($: EngineInterface, command: string): Promise<Outcome> => {
+  const result = await shell($, command, TEST_TIMEOUT_MS)
+  if (result.exitCode !== 0) return { handoff: `\`${command}\` failed (exit ${result.exitCode}):\n${tail(result.stdout + result.stderr)}` }
+  return { summary: `tests passed (\`${command}\`)` }
+}
+
+const waitForServer = async ($: EngineInterface, pid: string, logPath: string) => {
+  const deadline = (await $.clock.now()) + RUN_WAIT_MS
+  let log = ''
+  while ((await $.clock.now()) < deadline) {
+    await $.clock.sleep(RUN_POLL_MS)
+    log = await $.fs.read(logPath).catch(() => '')
+    if (LOCAL_URL.test(log) || !(await isAlive($, pid))) break
+  }
+  return { log, url: log.match(LOCAL_URL)?.[0], isRunning: await isAlive($, pid) }
+}
+
+const runKey = () => `run:${cwd}`
+const runningServer = async ($: EngineInterface) => {
+  const previous = (await $.store.get(runKey())) as RunRecord | undefined
+  return previous && (await isAlive($, previous.pid)) ? previous : undefined
+}
+
+// Only the server tinymodel started is known; any other one is the main model's to find.
+const stop = async ($: EngineInterface): Promise<Outcome> => {
+  const server = await runningServer($)
+  if (!server) return { handoff: 'tinymodel has no running server it started for this project; find and stop the server.' }
+  await $.process.run(['sh', '-c', KILL_TREE, 'tinymodel', server.pid])
+  const deadline = (await $.clock.now()) + STOP_WAIT_MS
+  while ((await isAlive($, server.pid)) && (await $.clock.now()) < deadline) await $.clock.sleep(RUN_POLL_MS)
+  if (await isAlive($, server.pid)) return { handoff: `\`${server.command}\` (pid ${server.pid}) did not stop within ${STOP_WAIT_MS / 1000} s.` }
+  await $.store.delete(runKey())
+  return { summary: `stopped \`${server.command}\` (pid ${server.pid})` }
+}
+
+const pull = async ($: EngineInterface): Promise<Outcome> => {
+  const result = await git($, 'pull', '--ff-only')
+  if (result.exitCode !== 0) return { handoff: `git pull --ff-only failed:\n${tail(result.stderr)}` }
+  return { summary: /up to date/i.test(result.stdout) ? 'already up to date' : `pulled ${await currentBranch($)}` }
+}
+
+// Started detached with output to a log file, so the server outlives this hook and a plugin reload.
+const run = async ($: EngineInterface, command: string): Promise<Outcome> => {
+  const previous = await runningServer($)
+  if (previous) {
+    return { summary: `already running \`${previous.command}\` (pid ${previous.pid}${previous.url ? `, ${previous.url}` : ''}, log ${previous.logPath})` }
+  }
+  const logPath = `${await tinymodelDir($)}/logs/${cwd.replace(/[^a-zA-Z0-9]+/g, '-')}-run.log`
+  const started = await $.process.run(
+    ['sh', '-c', 'mkdir -p "$(dirname "$2")"; nohup sh -c "$1" > "$2" 2>&1 < /dev/null & echo $!', 'tinymodel', command, logPath],
+    { cwd },
+  )
+  const pid = started.stdout.trim()
+  const { log, url, isRunning } = await waitForServer($, pid, logPath)
+  if (!isRunning) return { handoff: `\`${command}\` exited right after start. Log ${logPath}:\n${tail(log)}` }
+  await $.store.set(runKey(), { pid, command, url, logPath } satisfies RunRecord)
+  return { summary: `started \`${command}\` (pid ${pid}${url ? `, ${url}` : ''}, log ${logPath})` }
+}
+
+const deploy = async ($: EngineInterface, command: string): Promise<Outcome> => {
+  const answer = await $.ui.ask(`Run deploy command \`${command}\`?`, ['Deploy', 'Cancel']).catch(() => 'Cancel')
+  if (answer !== 'Deploy') return { summary: 'deploy cancelled' }
+  const result = await shell($, command, DEPLOY_TIMEOUT_MS)
+  if (result.exitCode !== 0) return { handoff: `\`${command}\` failed (exit ${result.exitCode}):\n${tail(result.stdout + result.stderr)}` }
+  return { summary: `deployed (\`${command}\`)` }
+}
+
+type Plan = { commitModel: string; mergedInto?: string; messageTimings: MessageTiming[] }
+
+const perform = async ($: EngineInterface, action: router.Action, plan: Plan): Promise<Outcome> => {
+  if (action === 'commit') return commit($, plan.commitModel, plan.messageTimings)
+  if (action === 'merge') return merge($)
+  if (action === 'push') return push($, plan.mergedInto)
+  if (action === 'pull') return pull($)
+  if (action === 'stop') return stop($)
+  if (action === 'restart') {
+    if (await runningServer($)) {
+      const stopped = await stop($)
+      if ('handoff' in stopped) return stopped
+    }
+    const started = await perform($, 'run', plan)
+    return 'summary' in started ? { summary: `re${started.summary}` } : started
+  }
+  const command = project.commandFor(action, await loadProject($))
+  if (!command) {
+    if (action !== 'deploy') learningAction = action
+    const hint = action === 'deploy' ? ' Deploy runs only from "deploy" in .claude/tinymodel.json.' : ''
+    return { handoff: `tinymodel found no ${action} command for this project.${hint}` }
+  }
+  if (action === 'test') return test($, command)
+  if (action === 'run') return run($, command)
+  return deploy($, command)
+}
+
+export const register: Register = (on, options) => {
+  const commitModel = String(options.commitModel)
+
+  on('session.start', async ($, e, next) => {
+    cwd = e.cwd
+    sessionId = await $.session.id()
+    await $.command.register({ name: 'tinymodel', description: 'Show what tinymodel handled and the main-model turns it saved' })
+    return next(e)
+  })
+
+  on('command.run', { command: 'tinymodel' }, async $ => ({ text: statsReport((await $.store.get('stats')) as Stats | undefined) }))
+
+  on('prompt.submit', async ($, e, next) => {
+    const passOn = async (extra: string[] = []) => {
+      const notes = await takeNotes($)
+      const noteBlock = notes.length ? [`[tinymodel] Since your last turn the user ran, without you: ${notes.join('; ')}`] : []
+      const context = [...(e.context ?? []), ...noteBlock, ...extra]
+      return next(context.length ? { ...e, context } : e)
+    }
+    if (e.command || e.isMeta || !HUMAN_ORIGINS.has(e.origin.kind)) return passOn()
+
+    const actions = router.route(e.text)
+    if (!actions) return passOn()
+
+    const done: string[] = []
+    doneThisPrompt = done
+    const plan: Plan = { commitModel, messageTimings: [] }
+    for (const action of actions) {
+      $.ui.status(`tinymodel: ${action}…`)
+      const outcome = await perform($, action, plan).catch(error => ({ handoff: `${action} threw: ${error}` }))
+      if ('handoff' in outcome) {
+        $.ui.status(undefined)
+        const before = done.length ? `tinymodel already did: ${done.join('; ')}. ` : ''
+        return passOn([`[tinymodel] ${before}Then ${action} needs you. ${outcome.handoff}`])
+      }
+      if (outcome.mergedInto) plan.mergedInto = outcome.mergedInto
+      done.push(outcome.summary)
+    }
+    $.ui.status(undefined)
+    await addNotes($, done)
+    await recordStats($, actions, plan.messageTimings[0])
+    return { drop: `tinymodel: ${done.join(' · ')}` }
+  }).catch(async ($, e, next) => {
+    // A hook that dies after running actions must not pass the prompt on, or the main model repeats them.
+    $.ui.status(undefined)
+    if (next.called || doneThisPrompt.length === 0) return next(e)
+    await addNotes($, doneThisPrompt)
+    return { drop: `tinymodel: ${doneThisPrompt.join(' · ')} (then stopped: hook timed out or failed)` }
+  })
+
+  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
+    const result = await next(e)
+    if (!learningAction || result.isError || ('deny' in result && result.deny)) return result
+    const command = project.learnable(learningAction, e.command, e.run_in_background === true)
+    if (command) {
+      await remember($, learningAction, command)
+      learningAction = undefined
+    }
+    return result
+  })
+
+  on('turn.complete', ($, e, next) => {
+    learningAction = undefined
+    return next(e)
+  })
+
+  on('session.end', async ($, e, next) => {
+    await $.store.delete(notesKey())
+    return next(e)
+  })
+}

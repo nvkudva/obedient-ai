@@ -13,6 +13,11 @@
       "name": "token-guard",
       "source": "./token-guard",
       "description": "Warns on long sessions, offers a fresh start on unrelated tasks, and trims wasteful Reads and repeated Bash calls."
+    },
+    {
+      "name": "tinymodel",
+      "source": "./tinymodel",
+      "description": "Runs short command prompts (commit, push, run, test, deploy, typos included) directly, without a main-model turn."
     }
   ]
 }
