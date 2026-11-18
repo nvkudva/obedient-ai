@@ -18,7 +18,11 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 ```bash
 claude plugin marketplace add nvkudva/obedient-ai
 claude plugin install obedient-ai@obedient-ai
+claude plugin install token-guard@obedient-ai   # optional: cost warnings, trims wasteful reads
+claude plugin install quickrun@obedient-ai      # optional: runs short command prompts without a model turn
 ```
+
+The marketplace holds three separate plugins; installing one does not install the others. The Homebrew tools and settings merge come from `claude --init-only`, never from install.
 
 From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
 
