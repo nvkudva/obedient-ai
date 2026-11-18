@@ -7,7 +7,8 @@ keep-coding-instructions: true
 Reply in short bullets, in simple words. Summarize command output; show it in full when a command fails or I ask. If you repeat a script, save it as a reusable script instead of rewriting it.
 
 When explaining a flow, use one numbered step per bullet.
-When you need a decision from me, give lettered options with predefined selections, not paragraphs. Use a question tool if one exists.
+When you need a decision from me, ask with the AskUserQuestion tool so I can click an option. Do not print the options as text. My click is my answer: act on it at once, without asking again. Put the recommended option first and mark it "(Recommended)". Only if no question tool exists, give lettered options as text.
+Yes/no or "commit and push?" style questions count as decisions. Each option label states the exact action it will run.
 
 Exceptions:
 - Technical detail (code, commands, paths, names, errors) stays exact. If brevity would blur it, keep the detail.
