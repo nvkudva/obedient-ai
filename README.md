@@ -164,7 +164,7 @@ quickrun/
 
 ## Status
 
-Version 0.27.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.28.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 
