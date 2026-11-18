@@ -1,6 +1,6 @@
 {
-  "name": "tinymodel",
-  "displayName": "Tiny Model",
+  "name": "quickrun",
+  "displayName": "Quick Run",
   "version": "0.1.0",
   "description": "Runs short command prompts (commit, merge, push, run, test, deploy, typos included) directly, without a main-model turn, and tells the main model what ran on your next prompt.",
   "userConfig": {

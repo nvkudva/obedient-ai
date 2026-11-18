@@ -1,10 +1,10 @@
-export type Action = 'pull' | 'commit' | 'merge' | 'push' | 'test' | 'deploy' | 'stop' | 'restart' | 'run'
+export type Action = 'pull' | 'commit' | 'merge' | 'push' | 'release' | 'test' | 'deploy' | 'stop' | 'restart' | 'run'
 
 const MAX_WORDS = 6
-const ACTION_ORDER: Action[] = ['pull', 'commit', 'merge', 'push', 'test', 'deploy', 'stop', 'restart', 'run']
+const ACTION_ORDER: Action[] = ['pull', 'commit', 'merge', 'push', 'release', 'test', 'deploy', 'stop', 'restart', 'run']
 
 const ACTION_WORDS: Record<string, Action> = {
-  pull: 'pull', stop: 'stop', restart: 'restart', commit: 'commit', merge: 'merge', push: 'push', deploy: 'deploy', ship: 'deploy',
+  pull: 'pull', release: 'release', tag: 'release', bump: 'release', version: 'release', stop: 'stop', restart: 'restart', commit: 'commit', merge: 'merge', push: 'push', deploy: 'deploy', ship: 'deploy',
   test: 'test', tests: 'test', run: 'run', start: 'run', serve: 'run', prod: 'deploy', production: 'deploy',
 }
 // Bare "run it" usually means a script just written (1 of 13 started a server in past sessions), and a bare
@@ -12,7 +12,7 @@ const ACTION_WORDS: Record<string, Action> = {
 const SERVER_ACTIONS = new Set<Action>(['run', 'stop', 'restart'])
 const SERVER_TARGETS = new Set(['dev', 'server', 'servers', 'app', 'start', 'serve'])
 const FILLER_WORDS = new Set([
-  'it', 'this', 'that', 'all', 'and', 'n', 'then', 'the', 'my', 'these', 'current', 'now', 'please', 'pls',
+  'it', 'this', 'that', 'them', 'those', 'all', 'and', 'n', 'then', 'the', 'my', 'these', 'current', 'now', 'please', 'pls',
   'ok', 'okay', 'lets', 'go', 'changes', 'change', 'code', 'everything', 'to', 'origin', 'main', 'git',
   'locally', 'local', 'app', 'server', 'servers', 'dev', 'project', 'again', 'up', 'latest',
 ])
@@ -25,7 +25,9 @@ const BLOCKING_WORDS = new Set([
   'kill',
 ])
 
-const wordsOf = (text: string) => text.toLowerCase().replace(/['’]/g, '').split(/[^a-z0-9.\/_-]+/).filter(Boolean)
+// Dots and slashes stay inside words so paths still block; a sentence's trailing dot does not.
+const wordsOf = (text: string) =>
+  text.toLowerCase().replace(/['’]/g, '').split(/[^a-z0-9.\/_-]+/).map(word => word.replace(/^\.+|\.+$/g, '')).filter(Boolean)
 
 // Damerau-Levenshtein; a distance of 1 covers for "comit", "psuh", "deploi".
 const editDistance = (a: string, b: string) => {
@@ -55,6 +57,7 @@ const actionOfWord = (word: string): Action | undefined => {
 
 const inOrder = (actions: Iterable<Action>) => {
   const wanted = new Set(actions)
+  if (wanted.has('release')) wanted.delete('push') // release pushes itself, after its own commit
   if (wanted.has('test')) wanted.delete('run') // "run tests" means test
   if (wanted.has('restart')) {
     wanted.delete('stop') // "stop servers and restart" means restart

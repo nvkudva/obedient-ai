@@ -15,8 +15,8 @@
       "description": "Warns on long sessions, offers a fresh start on unrelated tasks, and trims wasteful Reads and repeated Bash calls."
     },
     {
-      "name": "tinymodel",
-      "source": "./tinymodel",
+      "name": "quickrun",
+      "source": "./quickrun",
       "description": "Runs short command prompts (commit, push, run, test, deploy, typos included) directly, without a main-model turn."
     }
   ]

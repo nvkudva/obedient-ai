@@ -1,7 +1,7 @@
-// Replays your Claude Code transcripts through the tinymodel router.
-//   bun tinymodel/tools/history.ts eval   which past prompts would have been routed (check for false positives)
-//   bun tinymodel/tools/history.ts misses routed prompts where the main model did something else
-//   bun tinymodel/tools/history.ts seed   write the run/test commands the main model used per repo to learned.json
+// Replays your Claude Code transcripts through the quickrun router.
+//   bun quickrun/tools/history.ts eval   which past prompts would have been routed (check for false positives)
+//   bun quickrun/tools/history.ts misses routed prompts where the main model did something else
+//   bun quickrun/tools/history.ts seed   write the run/test commands the main model used per repo to learned.json
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -9,7 +9,7 @@ import * as router from '../hooks/router.ts'
 import * as project from '../hooks/project.ts'
 
 const PROJECTS_DIR = join(homedir(), '.claude', 'projects')
-const LEARNED_FILE = join(homedir(), '.claude', 'tinymodel', 'learned.json')
+const LEARNED_FILE = join(homedir(), '.claude', 'quickrun', 'learned.json')
 
 type Prompt = { text: string; cwd: string; timestamp: string; bashAfter: Array<{ command: string; isError: boolean; isBackground: boolean }> }
 
@@ -65,12 +65,13 @@ const routeAll = (prompts: Prompt[]) => {
   return routed
 }
 
-// Whether the main model's turn did what tinymodel would have done: a check on the router, not on the model.
+// Whether the main model's turn did what quickrun would have done: a check on the router, not on the model.
 const ACTION_EVIDENCE: Record<router.Action, (bash: Prompt['bashAfter'][number]) => boolean> = {
   commit: bash => /\bgit\b.*\bcommit\b/.test(bash.command),
   merge: bash => /\bgit\b.*\b(merge|fetch \.)/.test(bash.command),
   push: bash => /\bgit\b.*\bpush\b/.test(bash.command),
   pull: bash => /\bgit\b.*\bpull\b/.test(bash.command),
+  release: bash => /\bgit\b.*\btag\b|\bnpm version\b|\bgh release\b/.test(bash.command),
   stop: bash => /\b(kill|pkill|killall)\b/.test(bash.command),
   restart: bash => bash.isBackground,
   test: bash => /\b(test|pytest|vitest|jest)\b/.test(bash.command),
@@ -111,7 +112,7 @@ const seed = async () => {
       if (used && prompt.cwd) learned[prompt.cwd] = { ...learned[prompt.cwd], [action]: used }
     }
   }
-  mkdirSync(join(homedir(), '.claude', 'tinymodel'), { recursive: true })
+  mkdirSync(join(homedir(), '.claude', 'quickrun'), { recursive: true })
   writeFileSync(LEARNED_FILE, JSON.stringify(learned, null, 2))
   console.log(`wrote ${Object.keys(learned).length} repos to ${LEARNED_FILE}`)
   for (const [cwd, commands] of Object.entries(learned)) console.log(`${cwd}\n  ${JSON.stringify(commands)}`)
@@ -129,4 +130,4 @@ const mode = process.argv[2]
 if (mode === 'eval') await evaluate()
 else if (mode === 'misses') await misses()
 else if (mode === 'seed') await seed()
-else console.log('usage: bun tinymodel/tools/history.ts eval|misses|seed')
+else console.log('usage: bun quickrun/tools/history.ts eval|misses|seed')

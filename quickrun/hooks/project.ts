@@ -59,7 +59,7 @@ export const commandFor = (action: ProjectAction, project: Project): string | un
 
 const MAX_LEARNED_LENGTH = 150
 
-// The command the main model used after a hand-off, cleaned to what tinymodel can rerun, or undefined.
+// The command the main model used after a hand-off, cleaned to what quickrun can rerun, or undefined.
 // Only a background Bash call starts a server; the model's probes (curl, cat, ls) run in the foreground.
 export const learnable = (action: ProjectAction, command: string, isBackground: boolean): string | undefined => {
   if (command.includes('\n') || command.includes('<<')) return undefined

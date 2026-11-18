@@ -1,6 +1,6 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with three plugins. `obedient-ai` injects standing rules into every session, adds guard hooks for dangerous git, foreground sleeps and `pip install`, a keep-alive for the prompt cache, an optional output style, and four skills. `token-guard` warns before a session gets expensive and trims wasteful Reads. `tinymodel` runs short command prompts like `commit` or `run` without a main-model turn. Both are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with three plugins. `obedient-ai` injects standing rules into every session, adds guard hooks for dangerous git, foreground sleeps and `pip install`, a keep-alive for the prompt cache, an optional output style, and four skills. `token-guard` warns before a session gets expensive and trims wasteful Reads. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. Both are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
@@ -96,26 +96,27 @@ A second plugin in this marketplace: a Claude Code mod that warns before a sessi
 
 Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
 
-## tinymodel
+## quickrun
 
-A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install tinymodel@obedient-ai`, or try it from a clone with `claude --plugin-dir tinymodel`.
+A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir quickrun`.
 
-- Routes prompts of 6 words or fewer made only of command words and filler: `pull`, `commit`, `merge`, `push`, `test`, `deploy`, `stop`, `restart`, `run` and combinations (`comit n psuh`, `commit push deploy`). Typos within one edit are matched. `prod` means deploy.
+- Routes prompts of 6 words or fewer made only of command words and filler: `pull`, `commit`, `merge`, `push`, `release` (also `tag`, `bump`, `version`), `test`, `deploy`, `stop`, `restart`, `run` and combinations (`comit n psuh`, `commit push deploy`). Typos within one edit are matched. `prod` means deploy.
 - `run`, `stop` and `restart` need a target (`run dev`, `stop all servers`, `restart dev server`); a bare `run it` or `stop` goes to the main model, since in past sessions those rarely meant the dev server.
-- `pull` runs `git pull --ff-only`. `stop` stops only the server tinymodel started for the project (the whole process tree); any other server is the main model's to find. `restart` is stop, then run.
+- `pull` runs `git pull --ff-only`. `stop` stops only the server quickrun started for the project (the whole process tree); any other server is the main model's to find. `restart` is stop, then run.
 - Paraphrases (`fire up the dev server`) go to the main model. An embedding match was tried and dropped: it caught 1 of 7,994 past prompts.
 - A `?`, a question word, a work verb (`fix`, `add`, `explain`), a file path, or an action word next to an unknown one (`commit and version`) sends the prompt to the main model unchanged.
 - `commit` stages everything (`git add -A`) and writes the message with Haiku (`commitModel`, through the session's own API client). Repo hooks such as pre-commit still run. Files that look like secrets (`.env`, `*.pem`, `*credentials*`) are unstaged and the prompt goes to the main model. Haiku takes about 0.8 s.
 - `merge` fast-forwards the default branch to the current one, in the default branch's own worktree when it has one; anything else goes to the main model. `push` after `merge` pushes the default branch; otherwise it pushes the current branch and sets the upstream when missing.
-- `run` and `test` pick the command from `.claude/tinymodel.json`, then `package.json` scripts with the lockfile's tool, then commands learned from past sessions, then `manage.py`, `Cargo.toml`, `go.mod`, `pyproject.toml`. `run` starts detached, logs to `~/.claude/tinymodel/logs/`, waits up to 4 s for a local URL, and reports the server it started earlier if that one is still alive.
-- `deploy` runs only the `deploy` command in `.claude/tinymodel.json`, after a confirm.
+- `run` and `test` pick the command from `.claude/quickrun.json`, then `package.json` scripts with the lockfile's tool, then commands learned from past sessions, then `manage.py`, `Cargo.toml`, `go.mod`, `pyproject.toml`. `run` starts detached, logs to `~/.claude/quickrun/logs/`, waits up to 4 s for a local URL, and reports the server it started earlier if that one is still alive.
+- `release` picks the next version from the commits since the last `x.y.z` tag (breaking: major, or minor while 0.x; `feat`: minor; else patch), asks to confirm, bumps the first `version` field of tracked `*.json` and `*.toml` files that hold the current one (lockfiles skipped), commits `chore: release x.y.z`, adds an annotated tag with notes written by Haiku, and pushes the branch and the tag. Other places that name the version, such as a README line, are left alone.
+- `deploy` runs only the `deploy` command in `.claude/quickrun.json`, after a confirm.
 - A failed or unknown action hands the prompt to the main model with the error attached. When the main model then starts the server or runs the tests, that command is learned for the repo.
 - What ran is told to the main model on your next prompt, since a handled prompt never enters the conversation.
-- `/tinymodel` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
+- `/quickrun` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
 
-Project config, all optional: `.claude/tinymodel.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
+Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun tinymodel/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/tinymodel/learned.json`.
+`bun quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
@@ -145,12 +146,13 @@ token-guard/
   .claude-plugin/plugin.json
   hooks/hooks.json
   hooks/register.ts
-tinymodel/
+quickrun/
   .claude-plugin/plugin.json
   hooks/hooks.json
   hooks/register.ts
   hooks/router.ts
   hooks/project.ts
+  hooks/release.ts
   hooks/router.test.ts
   hooks/register.test.ts
   tools/history.ts

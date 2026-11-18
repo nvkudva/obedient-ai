@@ -24,6 +24,8 @@ const setup = async ($: any, on: any, gitAnswers: Array<[string, Run]> = []) => 
   })
   on('model.complete', () => ({ value: { isAnswered: true, text: 'feat: add greet', usage } }))
   on('ui.status', () => ({ value: undefined }))
+  on('ui.toast', () => ({ value: undefined }))
+  on('ui.log', () => ({ value: undefined }))
   on('clock.now', () => ({ value: 0 }))
   on('session.id', () => ({ value: 's1' }))
   on('command.register', () => ({ value: undefined }))
@@ -43,7 +45,7 @@ const setup = async ($: any, on: any, gitAnswers: Array<[string, Run]> = []) => 
 test('a handled command is dropped, and the next prompt tells the model what ran', async ($, on) => {
   const { seen, submit } = await setup($, on)
   const handled = await submit('comit n psuh')
-  expect(handled.drop).toBe('tinymodel: committed abc1234 "feat: add greet" (message by haiku, 0 ms) · pushed main')
+  expect(handled.drop).toBe('⚡ quickrun (no model turn): committed abc1234 "feat: add greet" (message by haiku, 0 ms) · pushed main')
   expect(seen.length).toBe(0)
 
   await submit('explain the greet helper')
@@ -73,7 +75,7 @@ test('merge fast-forwards main in its own worktree, then push pushes main', asyn
   const handled = await submit('merge n push')
   expect(gitCalls).toContain('-C /repo-main merge --ff-only feature')
   expect(gitCalls).toContain('push origin main')
-  expect(handled.drop).toBe('tinymodel: merged feature into main · pushed main')
+  expect(handled.drop).toBe('⚡ quickrun (no model turn): merged feature into main · pushed main')
 })
 
 test('a merge that cannot fast-forward goes to the main model', async ($, on) => {
@@ -85,19 +87,42 @@ test('a merge that cannot fast-forward goes to the main model', async ($, on) =>
   expect(seen[0]).toContain('fast-forward merge of feature into main failed')
 })
 
-test('stop without a server tinymodel started goes to the main model; pull fast-forwards', async ($, on) => {
+test('stop without a server quickrun started goes to the main model; pull fast-forwards', async ($, on) => {
   const { gitCalls, seen, submit } = await setup($, on)
   await submit('stop dev server')
   expect(seen[0]).toContain('no running server it started')
   const pulled = await submit('pull latest')
   expect(gitCalls).toContain('pull --ff-only')
-  expect(pulled.drop).toBe('tinymodel: pulled main')
+  expect(pulled.drop).toBe('⚡ quickrun (no model turn): pulled main')
 })
 
-test('/tinymodel reports handled prompts and estimated savings', async ($, on) => {
+test('release bumps, commits, tags with notes and pushes branch and tag', async ($, on) => {
+  const written = new Map<string, string>()
+  on('fs.read', () => ({ value: '{\n  "version": "0.26.0"\n}' }))
+  on('fs.write', (_: unknown, e: { path: string; text: string }) => (written.set(e.path, e.text), { value: undefined }))
+  on('tool.call', (_: unknown, e: any) => ({
+    result: { questions: e.questions, answers: { [e.questions[0].question]: 'Release' } },
+  }))
+  const { gitCalls, submit } = await setup($, on, [
+    ['status --porcelain', result(0, '')],
+    ['describe --tags', result(0, 'v0.26.0\n')],
+    ['log v0.26.0..HEAD', result(0, 'feat(quickrun): add plugin\n\x1efix: typo\n\x1e')],
+    ['rev-parse -q --verify refs/tags/v0.27.0', result(1, '')],
+    ['grep -l', result(0, 'package.json\n')],
+    ['remote', result(0, 'origin\n')],
+  ])
+  const handled = await submit('release')
+  expect(written.get('/repo/package.json')).toBe('{\n  "version": "0.27.0"\n}')
+  expect(gitCalls).toContain('commit -m chore: release 0.27.0')
+  expect(gitCalls.some(call => call.startsWith('tag -a v0.27.0 -m v0.27.0: feat: add greet'))).toBe(true)
+  expect(gitCalls).toContain('push origin v0.27.0')
+  expect(handled.drop).toBe('⚡ quickrun (no model turn): released v0.27.0 (minor, bumped package.json), pushed with the tag')
+})
+
+test('/quickrun reports handled prompts and estimated savings', async ($, on) => {
   const { submit } = await setup($, on)
   await submit('commit')
-  const report = await ($ as any).command.run({ command: 'tinymodel', args: '' })
+  const report = await ($ as any).command.run({ command: 'quickrun', args: '' })
   expect(report.text).toContain('handled 1 prompts (commit 1)')
   expect(report.text).toContain('~$0.72')
   expect(report.text).toContain('haiku 0 ms (1)')
