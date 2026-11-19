@@ -5,7 +5,7 @@ import * as release from './release'
 
 const COMMIT_SYSTEM = 'You write git commit messages in Conventional Commits form. Reply with the message only: a title under 72 characters, then optionally a blank line and up to 3 short bullet lines.'
 // Shown as the reason the prompt never reached the model.
-const DONE_PREFIX = '⚡ quickrun (no model turn): '
+const DONE_PREFIX = 'quickrun: '
 const HUMAN_ORIGINS = new Set(['composer', 'bridge', 'sdk'])
 const MAX_DIFF_CHARS = 12_000
 const MAX_OUTPUT_TAIL = 4_000
@@ -137,8 +137,7 @@ const commit = async ($: EngineInterface, model: string, timings: MessageTiming[
   if (!message) return { handoff: 'the commit message model gave no answer; changes are staged, write the message and commit.' }
   const result = await git($, 'commit', '-m', message)
   if (result.exitCode !== 0) return { handoff: `git commit failed:\n${tail(result.stdout + result.stderr)}` }
-  const hash = (await git($, 'rev-parse', '--short', 'HEAD')).stdout.trim()
-  return { summary: `committed ${hash} "${message.split('\n')[0]}" (message by ${timing.model}, ${Math.round(timing.ms)} ms)` }
+  return { summary: `committed. ${message.split('\n')[0]}` }
 }
 
 const defaultBranch = async ($: EngineInterface) => {
@@ -168,7 +167,7 @@ const merge = async ($: EngineInterface): Promise<Outcome> => {
   if (result.exitCode !== 0) {
     return { handoff: `fast-forward merge of ${source} into ${target} failed (${target} has moved on, or its worktree has conflicting changes):\n${tail(result.stderr)}` }
   }
-  return { summary: `merged ${source} into ${target}`, mergedInto: target }
+  return { summary: `merged. ${source} into ${target}`, mergedInto: target }
 }
 
 const push = async ($: EngineInterface, branch: string | undefined): Promise<Outcome> => {
@@ -176,13 +175,13 @@ const push = async ($: EngineInterface, branch: string | undefined): Promise<Out
   let result = branch ? await git($, 'push', 'origin', branch) : await git($, 'push')
   if (result.exitCode !== 0 && /no upstream|set-upstream/.test(result.stderr)) result = await git($, 'push', '-u', 'origin', 'HEAD')
   if (result.exitCode !== 0) return { handoff: `git push failed:\n${tail(result.stderr)}` }
-  return { summary: `pushed ${pushed}` }
+  return { summary: `pushed. ${pushed}` }
 }
 
 const test = async ($: EngineInterface, command: string): Promise<Outcome> => {
   const result = await shell($, command, TEST_TIMEOUT_MS)
   if (result.exitCode !== 0) return { handoff: `\`${command}\` failed (exit ${result.exitCode}):\n${tail(result.stdout + result.stderr)}` }
-  return { summary: `tests passed (\`${command}\`)` }
+  return { summary: `tests passed. (\`${command}\`)` }
 }
 
 const waitForServer = async ($: EngineInterface, pid: string, logPath: string) => {
@@ -211,13 +210,13 @@ const stop = async ($: EngineInterface): Promise<Outcome> => {
   while ((await isAlive($, server.pid)) && (await $.clock.now()) < deadline) await $.clock.sleep(RUN_POLL_MS)
   if (await isAlive($, server.pid)) return { handoff: `\`${server.command}\` (pid ${server.pid}) did not stop within ${STOP_WAIT_MS / 1000} s.` }
   await $.store.delete(runKey())
-  return { summary: `stopped \`${server.command}\` (pid ${server.pid})` }
+  return { summary: `stopped. \`${server.command}\` (pid ${server.pid})` }
 }
 
 const pull = async ($: EngineInterface): Promise<Outcome> => {
   const result = await git($, 'pull', '--ff-only')
   if (result.exitCode !== 0) return { handoff: `git pull --ff-only failed:\n${tail(result.stderr)}` }
-  return { summary: /up to date/i.test(result.stdout) ? 'already up to date' : `pulled ${await currentBranch($)}` }
+  return { summary: /up to date/i.test(result.stdout) ? 'already up to date' : `pulled. ${await currentBranch($)}` }
 }
 
 // Started detached with output to a log file, so the server outlives this hook and a plugin reload.
@@ -235,7 +234,7 @@ const run = async ($: EngineInterface, command: string): Promise<Outcome> => {
   const { log, url, isRunning } = await waitForServer($, pid, logPath)
   if (!isRunning) return { handoff: `\`${command}\` exited right after start. Log ${logPath}:\n${tail(log)}` }
   await $.store.set(runKey(), { pid, command, url, logPath } satisfies RunRecord)
-  return { summary: `started \`${command}\` (pid ${pid}${url ? `, ${url}` : ''}, log ${logPath})` }
+  return { summary: `started. \`${command}\` (pid ${pid}${url ? `, ${url}` : ''}, log ${logPath})` }
 }
 
 const releaseNotes = async ($: EngineInterface, model: string, tag: string, subjects: string[]) => {
@@ -285,7 +284,7 @@ const releaseVersion = async ($: EngineInterface, model: string): Promise<Outcom
 
   const question = `Release ${tag} (${level}, ${messages.length} commits since ${lastTag}): bump, commit, tag and push?`
   const answer = await $.ui.ask(question, ['Release', 'Cancel']).catch(() => 'Cancel')
-  if (answer !== 'Release') return { summary: 'release cancelled' }
+  if (answer !== 'Release') return { summary: 'release cancelled.' }
 
   const bumped = await bumpFiles($, await versionFiles($, from), from, to)
   if (bumped.length) {
@@ -298,21 +297,21 @@ const releaseVersion = async ($: EngineInterface, model: string): Promise<Outcom
   const tagged = await git($, 'tag', '-a', tag, '-m', `${tag}: ${notes}`)
   if (tagged.exitCode !== 0) return { handoff: `git tag failed:\n${tail(tagged.stderr)}` }
 
-  const done = `released ${tag} (${level}${bumped.length ? `, bumped ${bumped.join(', ')}` : ''})`
-  if (!(await git($, 'remote')).stdout.trim()) return { summary: `${done}, no remote to push to` }
+  const done = `${tag} (${level}${bumped.length ? `, bumped ${bumped.join(', ')}` : ''})`
+  if (!(await git($, 'remote')).stdout.trim()) return { summary: `released. ${done}, no remote to push to` }
   const pushed = await push($, undefined)
-  if ('handoff' in pushed) return { handoff: `${done}, then ${pushed.handoff}` }
+  if ('handoff' in pushed) return { handoff: `released ${done}, then ${pushed.handoff}` }
   const pushedTag = await git($, 'push', 'origin', tag)
-  if (pushedTag.exitCode !== 0) return { handoff: `${done}, then pushing the tag failed:\n${tail(pushedTag.stderr)}` }
-  return { summary: `${done}, pushed with the tag` }
+  if (pushedTag.exitCode !== 0) return { handoff: `released ${done}, then pushing the tag failed:\n${tail(pushedTag.stderr)}` }
+  return { summary: `released. ${done}, pushed with the tag` }
 }
 
 const deploy = async ($: EngineInterface, command: string): Promise<Outcome> => {
   const answer = await $.ui.ask(`Run deploy command \`${command}\`?`, ['Deploy', 'Cancel']).catch(() => 'Cancel')
-  if (answer !== 'Deploy') return { summary: 'deploy cancelled' }
+  if (answer !== 'Deploy') return { summary: 'deploy cancelled.' }
   const result = await shell($, command, DEPLOY_TIMEOUT_MS)
   if (result.exitCode !== 0) return { handoff: `\`${command}\` failed (exit ${result.exitCode}):\n${tail(result.stdout + result.stderr)}` }
-  return { summary: `deployed (\`${command}\`)` }
+  return { summary: `deployed. (\`${command}\`)` }
 }
 
 type Plan = { commitModel: string; mergedInto?: string; messageTimings: MessageTiming[] }
@@ -370,15 +369,15 @@ export const register: Register = (on, options) => {
     const done: string[] = []
     doneThisPrompt = done
     const plan: Plan = { commitModel, messageTimings: [] }
-    const announcement = `⚡ quickrun is running ${actions.join(' + ')} itself, without the model`
+    const announcement = `quickrun is running ${actions.join(' + ')} itself, without the model`
     $.ui.toast(announcement)
     $.ui.log(announcement)
     for (const action of actions) {
-      $.ui.status(`⚡ quickrun: ${action}…`)
+      $.ui.status(`quickrun: ${action}…`)
       const outcome = await perform($, action, plan).catch(error => ({ handoff: `${action} threw: ${error}` }))
       if ('handoff' in outcome) {
         $.ui.status(undefined)
-        $.ui.log(`⚡ quickrun could not finish ${action}; handing your prompt to the model`)
+        $.ui.log(`quickrun could not finish ${action}; handing your prompt to the model`)
         const before = done.length ? `quickrun already did: ${done.join('; ')}. ` : ''
         return passOn([`[quickrun] ${before}Then ${action} needs you. ${outcome.handoff}`])
       }

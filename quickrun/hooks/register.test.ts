@@ -45,7 +45,7 @@ const setup = async ($: any, on: any, gitAnswers: Array<[string, Run]> = []) => 
 test('a handled command is dropped, and the next prompt tells the model what ran', async ($, on) => {
   const { seen, submit } = await setup($, on)
   const handled = await submit('comit n psuh')
-  expect(handled.drop).toBe('⚡ quickrun (no model turn): committed abc1234 "feat: add greet" (message by haiku, 0 ms) · pushed main')
+  expect(handled.drop).toBe('quickrun: committed. feat: add greet · pushed. main')
   expect(seen.length).toBe(0)
 
   await submit('explain the greet helper')
@@ -75,7 +75,7 @@ test('merge fast-forwards main in its own worktree, then push pushes main', asyn
   const handled = await submit('merge n push')
   expect(gitCalls).toContain('-C /repo-main merge --ff-only feature')
   expect(gitCalls).toContain('push origin main')
-  expect(handled.drop).toBe('⚡ quickrun (no model turn): merged feature into main · pushed main')
+  expect(handled.drop).toBe('quickrun: merged. feature into main · pushed. main')
 })
 
 test('a merge that cannot fast-forward goes to the main model', async ($, on) => {
@@ -93,7 +93,7 @@ test('stop without a server quickrun started goes to the main model; pull fast-f
   expect(seen[0]).toContain('no running server it started')
   const pulled = await submit('pull latest')
   expect(gitCalls).toContain('pull --ff-only')
-  expect(pulled.drop).toBe('⚡ quickrun (no model turn): pulled main')
+  expect(pulled.drop).toBe('quickrun: pulled. main')
 })
 
 test('release bumps, commits, tags with notes and pushes branch and tag', async ($, on) => {
@@ -116,7 +116,7 @@ test('release bumps, commits, tags with notes and pushes branch and tag', async 
   expect(gitCalls).toContain('commit -m chore: release 0.27.0')
   expect(gitCalls.some(call => call.startsWith('tag -a v0.27.0 -m v0.27.0: feat: add greet'))).toBe(true)
   expect(gitCalls).toContain('push origin v0.27.0')
-  expect(handled.drop).toBe('⚡ quickrun (no model turn): released v0.27.0 (minor, bumped package.json), pushed with the tag')
+  expect(handled.drop).toBe('quickrun: released. v0.27.0 (minor, bumped package.json), pushed with the tag')
 })
 
 test('/quickrun reports handled prompts and estimated savings', async ($, on) => {

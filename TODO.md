@@ -1,0 +1,1 @@
+- [ ] quickrun: try $.ui.log/$.ui.status instead of drop to avoid the "Prompt dropped by a hook:" prefix in T3 Code; else file a T3 Code feature request
