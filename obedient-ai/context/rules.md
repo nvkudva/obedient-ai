@@ -97,7 +97,12 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - `AGENTS.md` is the stable map: build, test and run commands, a feature-to-files
   map, conventions, and gotchas. Under ~150 lines. No task state.
 - A repo's `CLAUDE.md` is one line, `@AGENTS.md`, plus Claude-only lines. Never
-  duplicate content between them.
+  duplicate content between them. If a repo's real instructions live in `CLAUDE.md`,
+  `git mv` them to `AGENTS.md` and reduce `CLAUDE.md` to that one line.
+- Other agents (Antigravity, Codex, Gemini) never see these rules. The first line of
+  every `AGENTS.md` must say: "Read PLAN.md and TODO.md before starting; update
+  them and this file when you finish." Add a `GEMINI.md` symlink to `AGENTS.md`
+  only if that agent does not read `AGENTS.md`.
 - New repo you scaffold: create all three files up front.
 - Existing repo without them: finish the task first, then ask me once whether to
   add them. If yes, write `AGENTS.md` from what you already read this task, with
@@ -143,7 +148,7 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - `block-dangerous-git.sh` blocks these, so never try them: `reset --hard/--merge/--keep`, `checkout -f` and `switch -f` on a dirty tree, `restore --source`, `clean -f`, `rm -f`, `stash drop/clear`, any force or `--mirror`/`--delete` push, `filter-branch`/`filter-repo`, `rebase`, `pull --rebase`, `commit --amend`, `branch -d/-D`, `tag -d`, `update-ref -d`, `reflog expire`, `gc --prune=now`, `prune`, `worktree remove -f`, `gh repo delete/archive`, `gh release delete`. If one is truly needed, stop and ask me.
 - Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts.
 - Keep browser JS evals short (under ~5 s). Split long work, and never await slow network calls inside an eval.
-- Use the dev-server port named in the project's CLAUDE.md. If none is named, pick a free port, then record it there.
+- Use the dev-server port named in the project's AGENTS.md. If none is named, pick a free port, then record it there.
 - Take a screenshot before any coordinate click. Prefer `find`/`read_page` refs over coordinates.
 - Don't read the same file in full more than twice. Use `rg -n` and a bounded range instead.
 - Run formatters and linters once at the end of an edit batch, not between edits.
