@@ -99,10 +99,10 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - A repo's `CLAUDE.md` is one line, `@AGENTS.md`, plus Claude-only lines. Never
   duplicate content between them. If a repo's real instructions live in `CLAUDE.md`,
   `git mv` them to `AGENTS.md` and reduce `CLAUDE.md` to that one line.
-- Other agents (Antigravity, Codex, Gemini) never see these rules. The first line of
-  every `AGENTS.md` must say: "Read PLAN.md and TODO.md before starting; update
-  them and this file when you finish." Add a `GEMINI.md` symlink to `AGENTS.md`
-  only if that agent does not read `AGENTS.md`.
+- Agents that don't load these rules (Codex, plain Gemini CLI) rely on the repo.
+  The first line of every `AGENTS.md` must say: "Read PLAN.md and TODO.md before
+  starting; update them and this file when you finish." Never add a `GEMINI.md`;
+  Antigravity reads `AGENTS.md` and a `GEMINI.md` can override it.
 - New repo you scaffold: create all three files up front.
 - Existing repo without them: finish the task first, then ask me once whether to
   add them. If yes, write `AGENTS.md` from what you already read this task, with
