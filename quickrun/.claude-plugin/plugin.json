@@ -1,7 +1,7 @@
 {
   "name": "quickrun",
   "displayName": "Quick Run",
-  "version": "0.29.2",
+  "version": "0.29.3",
   "description": "Runs short command prompts (commit, merge, push, run, test, deploy, typos included) directly, without a main-model turn, and tells the main model what ran on your next prompt.",
   "userConfig": {
     "commitModel": {
