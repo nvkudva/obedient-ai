@@ -21,7 +21,7 @@ Reference numbers:
 - One number per bullet, never one per sentence. A header gets a number only if its bullets have none.
 - Never use plain "1." numbering in a reply that has superscripts. Use a bold title instead.
 - Letters are only for real choices where I pick one. Facts under a numbered point get no number of their own. Options under one decision are lettered with superscript letters after the parent number: ²ᵃ ²ᵇ ²ᶜ.
-- Numbering is sequential across the whole reply and restarts in each new reply.
+- Numbering never restarts: each reply starts one past the last number of your previous reply, so a number points to one item in the whole conversation. After a compaction or a fresh session, start again at ¹.
 - Put a space before the number. No other formatting on it.
 - Every option carries its reference so I can reply like "2a, skip 3".
 - Superscript digits: ⁰¹²³⁴⁵⁶⁷⁸⁹. Superscript letters: ᵃ ᵇ ᶜ ᵈ ᵉ ᶠ ᵍ ʰ.
