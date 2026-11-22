@@ -48,7 +48,7 @@ const setup = async ($: any, on: any, gitAnswers: Array<[string, Run]> = []) => 
 test('a handled command is dropped, and the next prompt tells the model what ran', async ($, on) => {
   const { seen, submit } = await setup($, on)
   const handled = await submit('comit n psuh')
-  expect(handled.drop).toBe('quickrun: committed. feat: add greet · pushed. main')
+  expect(handled.drop).toBe('token-saver: committed. feat: add greet · pushed. main')
   expect(seen.length).toBe(0)
 
   await submit('explain the greet helper')
@@ -78,7 +78,7 @@ test('merge fast-forwards main in its own worktree, then push pushes main', asyn
   const handled = await submit('merge n push')
   expect(gitCalls).toContain('-C /repo-main merge --ff-only feature')
   expect(gitCalls).toContain('push origin main')
-  expect(handled.drop).toBe('quickrun: merged. feature into main · pushed. main')
+  expect(handled.drop).toBe('token-saver: merged. feature into main · pushed. main')
 })
 
 test('a merge that cannot fast-forward goes to the main model', async ($, on) => {
@@ -90,13 +90,13 @@ test('a merge that cannot fast-forward goes to the main model', async ($, on) =>
   expect(seen[0]).toContain('fast-forward merge of feature into main failed')
 })
 
-test('stop without a server quickrun started goes to the main model; pull fast-forwards', async ($, on) => {
+test('stop without a server token-saver started goes to the main model; pull fast-forwards', async ($, on) => {
   const { gitCalls, seen, submit } = await setup($, on)
   await submit('stop dev server')
   expect(seen[0]).toContain('no running server it started')
   const pulled = await submit('pull latest')
   expect(gitCalls).toContain('pull --ff-only')
-  expect(pulled.drop).toBe('quickrun: pulled. main')
+  expect(pulled.drop).toBe('token-saver: pulled. main')
 })
 
 test('release bumps, commits, tags with notes and pushes branch and tag', async ($, on) => {
@@ -119,14 +119,14 @@ test('release bumps, commits, tags with notes and pushes branch and tag', async 
   expect(gitCalls).toContain('commit -m chore: release 0.27.0')
   expect(gitCalls.some(call => call.startsWith('tag -a v0.27.0 -m v0.27.0: feat: add greet'))).toBe(true)
   expect(gitCalls).toContain('push origin v0.27.0')
-  expect(handled.drop).toBe('quickrun: released. v0.27.0 (minor, bumped package.json), pushed with the tag')
+  expect(handled.drop).toBe('token-saver: released. v0.27.0 (minor, bumped package.json), pushed with the tag')
 })
 
 test('/saver reports handled prompts and estimated savings', async ($, on) => {
   const { submit } = await setup($, on)
   await submit('commit')
   const report = await ($ as any).command.run({ command: 'saver', args: '' })
-  expect(report.text).toContain('quickrun handled 1 prompts (commit 1)')
+  expect(report.text).toContain('token-saver handled 1 prompts (commit 1)')
   expect(report.text).toContain('~$0.72')
   expect(report.text).toContain('haiku 0 ms (1)')
 })

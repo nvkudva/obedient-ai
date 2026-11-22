@@ -104,9 +104,9 @@ estimate) and a way to check it later (the baseline query, the number that shoul
 which to apply as a click, and apply only those. Do not edit anything before that answer.
 
 To see whether the plugins themselves earn their place, also count how often each fired: hook block
-messages by script name, `Skill` calls by skill, quickrun's "Prompt dropped by a hook". Text matches
-can include sessions that only quoted a script, so report them as upper bounds. `tools/plugin-usage.sh`
-in this repo does it for Claude Code.
+messages by script name, `Skill` calls by skill, token-saver's "Prompt dropped by a hook" (named
+quickrun in older logs). Text matches can include sessions that only quoted a script, so report them
+as upper bounds.
 
 ## 7. Finish
 

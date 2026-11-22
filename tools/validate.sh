@@ -13,7 +13,7 @@ for f in core/config.json package.json .claude-plugin/marketplace.json $claude/o
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
-for f in core/context/rules.md core/context/rules-opencode.md core/context/rules-antigravity.md dist/antigravity/rules/AGENTS.md dist/opencode/context.md dist/pi/APPEND_SYSTEM.md; do
+for f in core/rules/rules.md core/rules/mini.md core/rules/opencode.md core/rules/antigravity.md dist/antigravity/rules/AGENTS.md dist/opencode/context.md dist/pi/APPEND_SYSTEM.md; do
   if [ -s "$f" ]; then ok "$f non-empty"; else bad "$f missing or empty"; fi
 done
 

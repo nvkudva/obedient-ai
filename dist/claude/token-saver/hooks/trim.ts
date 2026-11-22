@@ -142,7 +142,7 @@ export async function onToolCall($: EngineInterface, e: any, next: any) {
   hasRedirectedThisTurn = true
   stats.failureLoops += 1
   $.ui.toast(`Same error ${failureCount} times: told the model to stop and report`)
-  const redirect = `token-guard: this error has now failed ${failureCount} times this turn ("${errorKey}"). Do not retry it again. Stop and tell the user what you tried and what you think is wrong.`
+  const redirect = `token-saver: this error has now failed ${failureCount} times this turn ("${errorKey}"). Do not retry it again. Stop and tell the user what you tried and what you think is wrong.`
   return { ...result, context: [...(result.context ?? []), redirect] }
 }
 
@@ -172,7 +172,7 @@ export async function onRead($: EngineInterface, e: any, next: any) {
   }
 
   if (IMAGE_PATTERN.test(e.file_path) && stat.size > IMAGE_BYTES) {
-    const smallPath = `${(await $.env.get('TMPDIR')) ?? '/tmp'}/token-guard-${stat.size}-${e.file_path.split('/').pop()}`
+    const smallPath = `${(await $.env.get('TMPDIR')) ?? '/tmp'}/token-saver-${stat.size}-${e.file_path.split('/').pop()}`
     const { exitCode } = await $.process.run(['sips', '-Z', '1200', e.file_path, '--out', smallPath])
     if (exitCode === 0) {
       stats.imagesDownscaled += 1

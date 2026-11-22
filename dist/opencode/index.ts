@@ -1,5 +1,5 @@
 // OpenCode entrypoint for the obedient-ai plugin. Runs from dist/opencode, where
-// tools/sync.py puts context.md (the shared rules plus context/rules-opencode.md) and skills/
+// tools/sync.py puts context.md (the shared rules plus rules/opencode.md) and skills/
 // beside it. OpenCode injects the rules through ctx.session.hook("context") and
 // registers the skills through ctx.skill.transform.
 

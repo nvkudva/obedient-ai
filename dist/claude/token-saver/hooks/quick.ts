@@ -5,7 +5,7 @@ import * as release from './release'
 
 const COMMIT_SYSTEM = 'You write git commit messages in Conventional Commits form. Reply with the message only: a title under 72 characters, then optionally a blank line and up to 3 short bullet lines.'
 // Shown as the reason the prompt never reached the model.
-const DONE_PREFIX = 'quickrun: '
+const DONE_PREFIX = 'token-saver: '
 const HUMAN_ORIGINS = new Set(['composer', 'bridge', 'sdk'])
 const MAX_DIFF_CHARS = 12_000
 const MAX_OUTPUT_TAIL = 4_000
@@ -80,11 +80,11 @@ async function recordStats($: EngineInterface, actions: router.Action[], timing?
 }
 
 const statsReport = (stats: Stats | undefined) => {
-  if (!stats || stats.prompts === 0) return 'quickrun has not handled a prompt yet.'
+  if (!stats || stats.prompts === 0) return 'token-saver has not handled a prompt yet.'
   const actions = Object.entries(stats.byAction).map(([action, count]) => `${action} ${count}`).join(', ')
   const averages = Object.entries(stats.messageTimes ?? {}).map(([model, time]) => `${model} ${Math.round(time.ms / time.count)} ms (${time.count})`)
   const messageAverage = averages.length ? `. Commit messages: ${averages.join(', ')}` : ''
-  return `quickrun handled ${stats.prompts} prompts (${actions}). Estimated main-model turns avoided: ~$${stats.usd.toFixed(2)} and ~${Math.round(stats.seconds / 60)} min${messageAverage}.`
+  return `token-saver handled ${stats.prompts} prompts (${actions}). Estimated main-model turns avoided: ~$${stats.usd.toFixed(2)} and ~${Math.round(stats.seconds / 60)} min${messageAverage}.`
 }
 
 async function loadProject($: EngineInterface): Promise<project.Project> {
@@ -129,7 +129,7 @@ async function commit($: EngineInterface, model: string, timings: MessageTiming[
   const secrets = staged.filter(path => SECRET_FILE.test(path) && !SAFE_SAMPLE.test(path))
   if (secrets.length) {
     await $.process.run(['sh', '-c', 'exec git "$@"', 'git', 'reset', '-q', '--', ...secrets], { cwd })
-    return { handoff: `staged changes include files that look like secrets (${secrets.join(', ')}). quickrun unstaged them and did not commit; ask the user before committing them or add them to .gitignore.` }
+    return { handoff: `staged changes include files that look like secrets (${secrets.join(', ')}). token-saver unstaged them and did not commit; ask the user before committing them or add them to .gitignore.` }
   }
   const stat = (await git($, 'diff', '--cached', '--stat')).stdout
   const diff = (await git($, 'diff', '--cached')).stdout.slice(0, MAX_DIFF_CHARS)
@@ -202,11 +202,11 @@ async function runningServer($: EngineInterface) {
   return previous && (await isAlive($, previous.pid)) ? previous : undefined
 }
 
-// Only the server quickrun started is known; any other one is the main model's to find.
+// Only the server token-saver started is known; any other one is the main model's to find.
 async function stop($: EngineInterface): Promise<Outcome> {
   const server = await runningServer($)
-  if (!server) return { handoff: 'quickrun has no running server it started for this project; find and stop the server.' }
-  await $.process.run(['sh', '-c', KILL_TREE, 'quickrun', server.pid])
+  if (!server) return { handoff: 'token-saver has no running server it started for this project; find and stop the server.' }
+  await $.process.run(['sh', '-c', KILL_TREE, 'token-saver', server.pid])
   const deadline = (await $.clock.now()) + STOP_WAIT_MS
   while ((await isAlive($, server.pid)) && (await $.clock.now()) < deadline) await $.clock.sleep(RUN_POLL_MS)
   if (await isAlive($, server.pid)) return { handoff: `\`${server.command}\` (pid ${server.pid}) did not stop within ${STOP_WAIT_MS / 1000} s.` }
@@ -228,7 +228,7 @@ async function run($: EngineInterface, command: string): Promise<Outcome> {
   }
   const logPath = `${await quickrunDir($)}/logs/${cwd.replace(/[^a-zA-Z0-9]+/g, '-')}-run.log`
   const started = await $.process.run(
-    ['sh', '-c', 'mkdir -p "$(dirname "$2")"; nohup sh -c "$1" > "$2" 2>&1 < /dev/null & echo $!', 'quickrun', command, logPath],
+    ['sh', '-c', 'mkdir -p "$(dirname "$2")"; nohup sh -c "$1" > "$2" 2>&1 < /dev/null & echo $!', 'token-saver', command, logPath],
     { cwd },
   )
   const pid = started.stdout.trim()
@@ -274,7 +274,7 @@ async function releaseVersion($: EngineInterface, model: string): Promise<Outcom
   if ((await git($, 'status', '--porcelain')).stdout.trim()) return { handoff: 'the working tree has uncommitted changes; commit or stash them before releasing.' }
   const lastTag = (await git($, 'describe', '--tags', '--abbrev=0')).stdout.trim()
   const current = release.parseVersion(lastTag)
-  if (!current) return { handoff: lastTag ? `the last tag ${lastTag} is not plain x.y.z, so quickrun cannot pick the next version.` : 'no previous tag; ask the user for the first version.' }
+  if (!current) return { handoff: lastTag ? `the last tag ${lastTag} is not plain x.y.z, so token-saver cannot pick the next version.` : 'no previous tag; ask the user for the first version.' }
   const log = (await git($, 'log', `${lastTag}..HEAD`, '--format=%s%n%b%x1e')).stdout
   const messages = log.split('\x1e').map(message => message.trim()).filter(Boolean)
   if (messages.length === 0) return { summary: `nothing to release since ${lastTag}` }
@@ -336,7 +336,7 @@ async function perform($: EngineInterface, action: router.Action, plan: Plan): P
   if (!command) {
     if (action !== 'deploy') learningAction = action
     const hint = action === 'deploy' ? ' Deploy runs only from "deploy" in .claude/quickrun.json.' : ''
-    return { handoff: `quickrun found no ${action} command for this project.${hint}` }
+    return { handoff: `token-saver found no ${action} command for this project.${hint}` }
   }
   if (action === 'test') return test($, command)
   if (action === 'run') return run($, command)
@@ -359,7 +359,7 @@ export async function onSessionStart($: EngineInterface, e: any) {
 export async function onPrompt($: EngineInterface, e: any, next: any) {
   const passOn = async (extra: string[] = []) => {
     const notes = await takeNotes($)
-    const noteBlock = notes.length ? [`[quickrun] Since your last turn the user ran, without you: ${notes.join('; ')}`] : []
+    const noteBlock = notes.length ? [`[token-saver] Since your last turn the user ran, without you: ${notes.join('; ')}`] : []
     const context = [...(e.context ?? []), ...noteBlock, ...extra]
     return next(context.length ? { ...e, context } : e)
   }
@@ -371,17 +371,17 @@ export async function onPrompt($: EngineInterface, e: any, next: any) {
   const done: string[] = []
   doneThisPrompt = done
   const plan: Plan = { commitModel, messageTimings: [] }
-  const announcement = `quickrun is running ${actions.join(' + ')} itself, without the model`
+  const announcement = `token-saver is running ${actions.join(' + ')} itself, without the model`
   $.ui.toast(announcement)
   $.ui.log(announcement)
   for (const action of actions) {
-    $.ui.status(`quickrun: ${action}…`)
+    $.ui.status(`token-saver: ${action}…`)
     const outcome = await perform($, action, plan).catch(error => ({ handoff: `${action} threw: ${error}` }))
     if ('handoff' in outcome) {
       $.ui.status(undefined)
-      $.ui.log(`quickrun could not finish ${action}; handing your prompt to the model`)
-      const before = done.length ? `quickrun already did: ${done.join('; ')}. ` : ''
-      return passOn([`[quickrun] ${before}Then ${action} needs you. ${outcome.handoff}`])
+      $.ui.log(`token-saver could not finish ${action}; handing your prompt to the model`)
+      const before = done.length ? `token-saver already did: ${done.join('; ')}. ` : ''
+      return passOn([`[token-saver] ${before}Then ${action} needs you. ${outcome.handoff}`])
     }
     if (outcome.mergedInto) plan.mergedInto = outcome.mergedInto
     done.push(outcome.summary)

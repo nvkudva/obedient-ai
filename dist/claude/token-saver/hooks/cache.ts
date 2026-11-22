@@ -44,7 +44,7 @@ async function tick($: EngineInterface) {
   pingsSent = 0
   stats.compactions += 1
   await $.store.set(STATS_KEY, stats)
-  await $.session.compact().catch(() => $.ui.status('cache-keeper: compact failed'))
+  await $.session.compact().catch(() => $.ui.status('token-saver: compact failed'))
 }
 
 export async function onSessionStart($: EngineInterface) {

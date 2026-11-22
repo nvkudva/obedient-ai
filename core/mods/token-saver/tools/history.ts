@@ -1,4 +1,4 @@
-// Replays your Claude Code transcripts through the quickrun router.
+// Replays your Claude Code transcripts through the token-saver router.
 //   bun core/mods/token-saver/tools/history.ts eval   which past prompts would have been routed (check for false positives)
 //   bun core/mods/token-saver/tools/history.ts misses routed prompts where the main model did something else
 //   bun core/mods/token-saver/tools/history.ts seed   write the run/test commands the main model used per repo to learned.json
@@ -65,7 +65,7 @@ const routeAll = (prompts: Prompt[]) => {
   return routed
 }
 
-// Whether the main model's turn did what quickrun would have done: a check on the router, not on the model.
+// Whether the main model's turn did what token-saver would have done: a check on the router, not on the model.
 const ACTION_EVIDENCE: Record<router.Action, (bash: Prompt['bashAfter'][number]) => boolean> = {
   commit: bash => /\bgit\b.*\bcommit\b/.test(bash.command),
   merge: bash => /\bgit\b.*\b(merge|fetch \.)/.test(bash.command),

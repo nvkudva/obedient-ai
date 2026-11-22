@@ -3,8 +3,8 @@
 
 All hand-written settings live in core/config.json: name, version, repo,
 description, guard order and each Claude mod's manifest. The owner comes from the
-repo URL. Each agent gets context/rules.md, output-styles/mini.md and, when it
-exists, context/rules-<agent>.md. Real code stays hand-written in core/hooks and core/mods.
+repo URL. Each agent gets rules/rules.md, rules/mini.md and, when it exists,
+rules/<agent>.md. Real code stays hand-written in core/hooks and core/mods.
 
 dist/ is committed because a GitHub install reads the repo as is. It holds real
 files, not symlinks: Claude Code copies a plugin to a cache and cannot follow
@@ -37,7 +37,7 @@ def strip_frontmatter(path: Path) -> str:
 
 
 def write_rules(agent: str, target: Path) -> None:
-    files = [core / "context" / "rules.md", core / "output-styles" / "mini.md", core / "context" / f"rules-{agent}.md"]
+    files = [core / "rules" / "rules.md", core / "rules" / "mini.md", core / "rules" / f"{agent}.md"]
     rules = [strip_frontmatter(path) for path in files if path.exists()]
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text(GENERATED + "\n\n" + "\n".join(rules))
@@ -52,9 +52,9 @@ def copy_guards(target: Path) -> None:
 def build_claude() -> None:
     claude = dist / "claude"
     plugin = claude / project["name"]
-    (plugin / "context").mkdir(parents=True)
-    shutil.copy(core / "context" / "rules.md", plugin / "context" / "rules.md")
-    shutil.copytree(core / "output-styles", plugin / "output-styles")
+    for folder, name in [("context", "rules.md"), ("output-styles", "mini.md")]:
+        (plugin / folder).mkdir(parents=True)
+        shutil.copy(core / "rules" / name, plugin / folder / name)
     shutil.copytree(core / "skills", plugin / "skills")
     copy_guards(plugin / "hooks")
     shutil.copy(core / "hooks" / "export-scratch.sh", plugin / "hooks" / "export-scratch.sh")
