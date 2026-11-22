@@ -1,6 +1,6 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with five plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, and guard hooks for dangerous git, foreground sleeps and `pip install`. `obedient-skills` adds the `polish`, `learn-logs` and `marketing` skills; `obedient-post` adds the `post` skill. `token-guard` warns before a session gets expensive, trims wasteful Reads and keeps the prompt cache warm. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with six plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, and guard hooks for dangerous git, foreground sleeps and `pip install`. `obedient-skills` adds the `polish`, `learn-logs` and `marketing` skills; `obedient-post` adds the `post` skill. `token-guard` warns before a session gets expensive and trims wasteful Reads. `cache-keeper` keeps the prompt cache warm in long idle sessions. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
@@ -20,11 +20,12 @@ claude plugin marketplace add nvkudva/obedient-ai
 claude plugin install obedient-ai@obedient-ai
 claude plugin install obedient-skills@obedient-ai   # optional: polish, learn-logs, marketing skills
 claude plugin install obedient-post@obedient-ai     # optional: the post skill
-claude plugin install token-guard@obedient-ai       # optional: cost warnings, trims wasteful reads, cache keep-alive
+claude plugin install token-guard@obedient-ai       # optional: cost warnings, trims wasteful reads
+claude plugin install cache-keeper@obedient-ai      # optional: keeps the prompt cache warm (each ping spends tokens)
 claude plugin install quickrun@obedient-ai      # optional: runs short command prompts without a model turn
 ```
 
-The marketplace holds five separate plugins; installing one does not install the others. Turn one off without uninstalling: `claude plugin disable quickrun@obedient-ai`. The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
+The marketplace holds six separate plugins; installing one does not install the others. Turn one off without uninstalling: `claude plugin disable quickrun@obedient-ai`. Inside a session, `/quickrun off` and `/guard off` pause quickrun and token-guard (`on` resumes); the choice is stored. The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
 
 From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
 
@@ -98,7 +99,6 @@ A second plugin in this marketplace: a Claude Code mod that warns before a sessi
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
 - The same tool error (digits ignored) three times in one turn appends a note to the third result telling the model to stop retrying and say what it tried. Once per turn, never blocks.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
-- Cache keep-alive (`hooks/cacheKeeper.ts`): after `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Turn it off with `isCacheKeeperOn` in the plugin's user config (`/plugin configure token-guard@obedient-ai`).
 - `/guard` prints the counters and the transcripts folder size.
 
 Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
@@ -141,7 +141,8 @@ adapters/
                      generated: context/, output-styles/, guard scripts in hooks/
     obedient-skills/ generated: skills/{polish,learn-logs,marketing}
     obedient-post/   generated: skills/post
-    token-guard/     Claude Code only; hooks/{register.ts,cacheKeeper.ts}
+    token-guard/     Claude Code only
+    cache-keeper/    Claude Code only; hooks/cacheKeeper.ts
     quickrun/      Claude Code only
   antigravity/     hand-written: plugin.json, hooks.json; generated: rules/AGENTS.md, skills/, hooks/
   opencode/index.ts   reads core/ directly
