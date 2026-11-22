@@ -23,12 +23,16 @@ copy_guards() {
   for f in "${guards[@]}"; do cp "core/guards/$f" "$1/$f"; done
 }
 
-claude=adapters/claude/obedient-ai
-rm -rf "$claude/skills" "$claude/context" "$claude/output-styles"
-cp -R core/skills "$claude/skills"
-cp -R core/context "$claude/context"
-cp -R core/output-styles "$claude/output-styles"
-copy_guards "$claude/hooks"
+claude=adapters/claude
+rm -rf "$claude/obedient-ai/context" "$claude/obedient-ai/output-styles" "$claude/obedient-ai/skills"
+cp -R core/context "$claude/obedient-ai/context"
+cp -R core/output-styles "$claude/obedient-ai/output-styles"
+copy_guards "$claude/obedient-ai/hooks"
+
+rm -rf "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
+mkdir -p "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
+for skill in polish learn-logs marketing; do cp -R "core/skills/$skill" "$claude/obedient-skills/skills/$skill"; done
+cp -R core/skills/post "$claude/obedient-post/skills/post"
 
 agy=adapters/antigravity
 rm -rf "$agy/skills" "$agy/hooks"

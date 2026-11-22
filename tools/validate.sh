@@ -9,7 +9,7 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 cd "$(dirname "$0")/.." || exit 1
 
 claude=adapters/claude
-for f in .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json $claude/obedient-ai/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json adapters/antigravity/plugin.json adapters/antigravity/hooks.json; do
+for f in .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/obedient-skills/.claude-plugin/plugin.json $claude/obedient-post/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json adapters/antigravity/plugin.json adapters/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
@@ -25,7 +25,7 @@ done
 scratch=$(mktemp -d)
 tar --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C "$scratch"
 "$scratch/tools/sync.sh"
-for path in $claude/obedient-ai/skills $claude/obedient-ai/context $claude/obedient-ai/output-styles $claude/obedient-ai/hooks adapters/antigravity/skills adapters/antigravity/hooks adapters/antigravity/rules adapters/pi; do
+for path in $claude/obedient-skills/skills $claude/obedient-post/skills $claude/obedient-ai/context $claude/obedient-ai/output-styles $claude/obedient-ai/hooks adapters/antigravity/skills adapters/antigravity/hooks adapters/antigravity/rules adapters/pi; do
   if diff -r "$path" "$scratch/$path" >/dev/null 2>&1; then ok "$path in sync with core/"; else bad "$path out of sync (run tools/sync.sh)"; fi
 done
 rm -rf "$scratch"

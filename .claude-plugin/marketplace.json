@@ -10,12 +10,22 @@
     {
       "name": "obedient-ai",
       "source": "./adapters/claude/obedient-ai",
-      "description": "Standing rules at session start, git/sleep/pip guard hooks, a prompt-cache keep-alive, and the polish, analyze-coding-agent-logs, post and marketing skills."
+      "description": "Standing rules at session start and guard hooks for dangerous git, foreground sleeps and pip install."
+    },
+    {
+      "name": "obedient-skills",
+      "source": "./adapters/claude/obedient-skills",
+      "description": "The polish, learn-logs and marketing skills."
+    },
+    {
+      "name": "obedient-post",
+      "source": "./adapters/claude/obedient-post",
+      "description": "The post skill: LinkedIn and X posts in the author's voice."
     },
     {
       "name": "token-guard",
       "source": "./adapters/claude/token-guard",
-      "description": "Warns on long sessions, offers a fresh start on unrelated tasks, and trims wasteful Reads and repeated Bash calls."
+      "description": "Warns on long sessions, trims wasteful Reads and repeated Bash calls, and keeps the prompt cache warm."
     },
     {
       "name": "quickrun",

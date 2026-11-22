@@ -1,7 +1,7 @@
 #!/bin/bash
 # One-time machine setup for obedient-ai: installs or updates the CLI tools the
 # rules expect, then merges claude-settings.json into ~/.claude/settings.json.
-# Runs as the plugin's Setup hook: `claude --init-only`. Re-run to update.
+# Run it by hand: `tools/bootstrap.sh`. Re-run to update.
 # Works on macOS and Linux (Homebrew refuses to run as root).
 
 if ! command -v brew >/dev/null; then

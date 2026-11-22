@@ -1,16 +1,5 @@
 {
   "hooks": {
-    "Setup": [
-      {
-        "hooks": [
-          {
-            "type": "command",
-            "command": "\"${CLAUDE_PLUGIN_ROOT}/setup.sh\"",
-            "timeout": 1800
-          }
-        ]
-      }
-    ],
     "SessionStart": [
       {
         "hooks": [
@@ -44,8 +33,5 @@
         ]
       }
     ]
-  },
-  "modules": [
-    "./cacheKeeper.ts"
-  ]
+  }
 }

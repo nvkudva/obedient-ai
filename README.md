@@ -1,6 +1,6 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with three plugins. `obedient-ai` injects standing rules into every session, adds guard hooks for dangerous git, foreground sleeps and `pip install`, a keep-alive for the prompt cache, an optional output style, and four skills. `token-guard` warns before a session gets expensive and trims wasteful Reads. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. Both are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with five plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, and guard hooks for dangerous git, foreground sleeps and `pip install`. `obedient-skills` adds the `polish`, `learn-logs` and `marketing` skills; `obedient-post` adds the `post` skill. `token-guard` warns before a session gets expensive, trims wasteful Reads and keeps the prompt cache warm. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
@@ -10,7 +10,7 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 - A POSIX shell on PATH, plus `jq` for the guard hooks. On Windows without one, the hooks do nothing
 - Git, if you install from a local clone
 - macOS is the tested platform: `export-scratch.sh` builds a `/private/tmp` path, and token-guard downscales images with `sips`
-- `setup.sh` is optional and does touch the network and your machine, see "Setup script" below
+- `tools/bootstrap.sh` is optional and does touch the network and your machine, see "Bootstrap script" below
 - No accounts or keys
 
 ## Run it
@@ -18,11 +18,13 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 ```bash
 claude plugin marketplace add nvkudva/obedient-ai
 claude plugin install obedient-ai@obedient-ai
-claude plugin install token-guard@obedient-ai   # optional: cost warnings, trims wasteful reads
+claude plugin install obedient-skills@obedient-ai   # optional: polish, learn-logs, marketing skills
+claude plugin install obedient-post@obedient-ai     # optional: the post skill
+claude plugin install token-guard@obedient-ai       # optional: cost warnings, trims wasteful reads, cache keep-alive
 claude plugin install quickrun@obedient-ai      # optional: runs short command prompts without a model turn
 ```
 
-The marketplace holds three separate plugins; installing one does not install the others. The Homebrew tools and settings merge come from `claude --init-only`, never from install.
+The marketplace holds five separate plugins; installing one does not install the others. Turn one off without uninstalling: `claude plugin disable quickrun@obedient-ai`. The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
 
 From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
 
@@ -46,7 +48,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 - `PreToolUse:Bash`: `block-dangerous-git.sh` blocks irreversible git and `rm` commands (list in `rules.md`, "Guardrails"). It is skipped in auto mode. Bypass one command with `ALLOW_DANGEROUS_GIT=1`.
 - `PreToolUse:Bash`: `block-sleep.sh` blocks a foreground `sleep` over 10 seconds. Bypass with `ALLOW_SLEEP=1`.
 - `PreToolUse:Bash`: `prefer-fast-tools.sh` blocks `pip install` when `uv` is installed. Bypass with `ALLOW_SLOW_TOOL=1`.
-- `modules`: `hooks/cacheKeeper.ts` is a keep-alive. After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Set the three values in the plugin's user config; raise `minTokens` very high to effectively disable it.
+
 
 There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `core/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-ai:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
 
@@ -61,11 +63,11 @@ Four rules, verbatim, so you can judge the fit before installing:
 - "If you fail 3 times at the same problem, or keep repeating the same approach, stop and tell me what you tried."
 - "Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts."
 
-## Setup script
+## Bootstrap script
 
-`adapters/claude/obedient-ai/setup.sh` runs only from the plugin's `Setup` hook, which fires on `claude --init-only`, not on every session. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `adapters/claude/obedient-ai/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
+`tools/bootstrap.sh` runs only when you run it; no hook calls it. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `tools/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
 
-The plugin also bundles four skills, each loaded lazily when its description matches the request:
+The skills are split across `obedient-skills` (`polish`, `learn-logs`, `marketing`) and `obedient-post` (`post`). Each loads lazily when its description matches the request:
 
 - `polish` (`core/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
 - `post` (`core/skills/post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
@@ -96,6 +98,7 @@ A second plugin in this marketplace: a Claude Code mod that warns before a sessi
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
 - The same tool error (digits ignored) three times in one turn appends a note to the third result telling the model to stop retrying and say what it tried. Once per turn, never blocks.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
+- Cache keep-alive (`hooks/cacheKeeper.ts`): after `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Turn it off with `isCacheKeeperOn` in the plugin's user config (`/plugin configure token-guard@obedient-ai`).
 - `/guard` prints the counters and the transcripts folder size.
 
 Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
@@ -134,14 +137,16 @@ core/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
 adapters/
   claude/
-    obedient-ai/   hand-written: plugin.json, hooks/{hooks.json,cacheKeeper.ts,export-scratch.sh}, setup.sh, claude-settings.json
-                   generated: skills/, context/, output-styles/, guard scripts in hooks/
-    token-guard/   Claude Code only
+    obedient-ai/     hand-written: plugin.json, hooks/{hooks.json,export-scratch.sh}
+                     generated: context/, output-styles/, guard scripts in hooks/
+    obedient-skills/ generated: skills/{polish,learn-logs,marketing}
+    obedient-post/   generated: skills/post
+    token-guard/     Claude Code only; hooks/{register.ts,cacheKeeper.ts}
     quickrun/      Claude Code only
   antigravity/     hand-written: plugin.json, hooks.json; generated: rules/AGENTS.md, skills/, hooks/
   opencode/index.ts   reads core/ directly
   pi/              generated: APPEND_SYSTEM.md (pi skills read core/skills via package.json)
-tools/{sync,validate}.sh
+tools/{sync,validate,bootstrap,plugin-usage}.sh, tools/claude-settings.json
 .claude-plugin/marketplace.json
 ```
 

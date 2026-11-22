@@ -3,6 +3,8 @@ import type { Register } from 'claude-code'
 const MS_PER_MINUTE = 60_000
 
 export const register: Register = (on, options) => {
+  if (String(options.isCacheKeeperOn) === 'false') return
+
   const intervalMs = Number(options.intervalMinutes) * MS_PER_MINUTE
   const maxPings = Number(options.maxPings)
   const minTokens = Number(options.minTokens)
