@@ -28,8 +28,8 @@ python3 "$scratch/tools/sync.py"
 if diff -r dist "$scratch/dist" >/dev/null 2>&1; then ok "dist/ in sync with core/"; else bad "dist/ out of sync (run tools/sync.py)"; fi
 rm -rf "$scratch"
 
-for name in $(grep -o '"[a-z-]*\.md"' dist/opencode/index.ts | tr -d '"'); do
-  if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in dist/opencode/index.ts but missing"; fi
+for name in $(grep -o '"[a-z-]*\.md"' core/mods/opencode/index.ts | tr -d '"'); do
+  if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in core/mods/opencode/index.ts but missing"; fi
 done
 
 for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' dist/claude/obedient-ai/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do

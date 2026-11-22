@@ -8,7 +8,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const coreRoot = join(fileURLToPath(new URL("../..", import.meta.url)), "core");
+const coreRoot = join(fileURLToPath(new URL("../../..", import.meta.url)), "core");
 const contextRoot = join(coreRoot, "context");
 const skillsRoot = join(coreRoot, "skills");
 

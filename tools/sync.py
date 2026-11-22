@@ -3,8 +3,8 @@
 
 The only hand-written facts are in core/project.json (name, version, owner, repo,
 description, guard order). Manifests, hook wiring and the marketplace file are
-generated from it. Real code stays hand-written: core/hooks, core/opencode and
-core/mods (the Claude Code mods).
+generated from it. Real code stays hand-written: core/hooks and core/mods (the Claude Code
+mod and the OpenCode adapter).
 
 dist/ is committed because a GitHub install reads the repo as is. It holds real
 files, not symlinks: Claude Code copies a plugin to a cache and cannot follow
@@ -71,7 +71,7 @@ def build_claude() -> None:
         "PreToolUse": [{"matcher": "Bash", "hooks": [command(f'"${{CLAUDE_PLUGIN_ROOT}}/hooks/{name}.sh"') for name in guards]}],
     }})
 
-    for mod in sorted((core / "mods").iterdir()):
+    for mod in sorted(path for path in (core / "mods").iterdir() if (path / ".claude-plugin").is_dir()):
         copy_plugin(mod, claude / mod.name)
         stamp_version(claude / mod.name / ".claude-plugin" / "plugin.json")
     shutil.rmtree(claude / "token-saver" / "tools", ignore_errors=True)
@@ -101,9 +101,7 @@ def build_antigravity() -> None:
     (agy / "rules" / "AGENTS.md").write_text(GENERATED + "\n\n" + "\n".join(rules))
 
 
-def build_opencode_and_pi() -> None:
-    (dist / "opencode").mkdir()
-    shutil.copy(core / "opencode" / "index.ts", dist / "opencode" / "index.ts")
+def build_pi() -> None:
     (dist / "pi").mkdir()
     rules = [strip_frontmatter(core / "context" / "rules.md"), strip_frontmatter(core / "output-styles" / "mini.md")]
     (dist / "pi" / "APPEND_SYSTEM.md").write_text(GENERATED + "\n\n" + "\n".join(rules))
@@ -117,5 +115,5 @@ def stamp_package_version() -> None:
 shutil.rmtree(dist, ignore_errors=True)
 build_claude()
 build_antigravity()
-build_opencode_and_pi()
+build_pi()
 stamp_package_version()
