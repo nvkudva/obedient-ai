@@ -1,17 +1,23 @@
 {
   "name": "obedient-ai",
   "version": "0.30.2",
-  "description": "Injects standing rules into every OpenCode session and ships the post, marketing, and polish skills.",
+  "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills.",
+  "repository": "https://github.com/nvkudva/obedient-ai",
   "type": "module",
-  "keywords": ["pi-package"],
+  "keywords": [
+    "pi-package"
+  ],
   "pi": {
-    "skills": ["./core/skills"]
+    "skills": [
+      "./dist/pi/skills"
+    ]
   },
   "exports": {
-    ".": "./core/mods/opencode/index.ts"
+    ".": "./dist/opencode/index.ts"
   },
   "files": [
-    "core"
+    "dist/opencode",
+    "dist/pi"
   ],
   "dependencies": {
     "@opencode/plugin": "latest"

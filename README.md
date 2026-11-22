@@ -51,7 +51,7 @@ There is no per-project override. The reply format (short numbered bullets, supe
 
 The rules payload is `core/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
-OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`, loaded by `core/mods/opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
+OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`. `tools/sync.py` joins the files listed under `rules.opencode` in `core/project.json` into `dist/opencode/context.md`, and `dist/opencode/index.ts` injects it. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
 Four rules, verbatim, so you can judge the fit before installing:
 
@@ -77,10 +77,10 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 |---|---|---|---|
 | Claude Code | yes | yes | yes |
 | Antigravity | yes, via `dist/antigravity/rules/AGENTS.md` (run `agy plugin install ./dist/antigravity`) | yes (`dist/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `token-saver` no |
-| OpenCode | yes, via `core/mods/opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
-| pi | copy or symlink `dist/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
+| OpenCode | yes, via `dist/opencode/index.ts` (the root `package.json` exports it; typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, `dist/opencode/skills` | no |
+| pi | copy or symlink `dist/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads `pi.skills` in the root `package.json`, which points at `dist/pi/skills` | no |
 
-Edit only `core/`. Run `./tools/sync.py` after any change there: it rebuilds `dist/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `token-saver` uses Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
+Edit only `core/`. Run `./tools/sync.py` after any change there: it rebuilds `dist/`, the root `package.json` and `.claude-plugin/marketplace.json` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `token-saver` uses Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
 
 ## token-saver: trim and nudge
 
@@ -135,29 +135,32 @@ core/
   output-styles/mini.md
   skills/{post,marketing,polish,learn-logs}/
   hooks/{_common,block-dangerous-git,block-sleep,prefer-fast-tools,export-scratch}.sh
-  project.json        the only hand-written manifest facts: name, version, owner, repo, description, guard order
+  project.json        every hand-written setting: name, version, owner, repo, description, guard order,
+                      which rules each agent gets, OpenCode dependencies, and each Claude mod's manifest
   mods/
-    token-saver/ Claude Code only: plugin.json, hooks/{register,quick,trim,cache}.ts, tests, tools
-    opencode/    index.ts, the OpenCode adapter; OpenCode loads it straight from the repo
+    token-saver/ Claude Code only: hooks/{register,quick,trim,cache}.ts, tests, tools
+    opencode/    index.ts, the OpenCode adapter
 dist/            generated, never edit
   claude/<plugin>/   what the marketplace installs (skills, rules and guard scripts copied in; tests left out)
-  antigravity/  pi/
+  antigravity/       plugin.json, hooks.json, rules/AGENTS.md, skills, guard scripts
+  opencode/          index.ts, context.md, skills
+  pi/                APPEND_SYSTEM.md, skills
 tools/{sync.py,validate.sh,bootstrap.sh,plugin-usage.sh}, tools/claude-settings.json
-.claude-plugin/marketplace.json
+.claude-plugin/marketplace.json, package.json   generated; they stay at the root because Claude Code, OpenCode and pi look there
 ```
 
-Adding an agent: one folder under `core/`, one block in `tools/sync.py`, one row in the table above.
+Adding an agent: a `rules.<agent>` list in `core/project.json`, one build function in `tools/sync.py`, one row in the table above. Adding a Claude mod: its code in `core/mods/<name>/` and its manifest under `mods` in `core/project.json`.
 
 ## Status
 
-Version 0.28.0. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
+Version 0.30.2. The hooks and the skills work; the marketplace installs from GitHub and from a local path.
 
 Fixed as of 22 October 2026:
 
 - The session hook now asserts `context/rules.md` is non-empty. It prints the path and exits 2 instead of starting a session with no rules.
 - The `post` skill no longer triggers on "help me write"; that phrase fired on emails, commits and docs.
 - The `post` skill reads `~/.config/obedient-ai/voice.md` when present and uses it as the persona, falling back to the author's voice otherwise.
-- `tools/validate.sh` checks the three JSON manifests, both rules files, every context file named in `core/mods/opencode/index.ts`, every path `hooks.json` runs, and that each skill's `name` matches its directory. `.github/workflows/validate.yml` runs it on push and pull request.
+- `tools/validate.sh` checks every JSON manifest, every rules file, that `dist/` and the generated root files match a fresh build, every file the OpenCode adapter and `package.json` point at, every path `hooks.json` runs, and that each skill's `name` matches its directory. `.github/workflows/validate.yml` runs it on push and pull request.
 - The `PLAN.md`/`TODO.md` section now applies only when the repo has one of those files.
 
 Still open:

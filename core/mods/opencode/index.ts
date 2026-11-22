@@ -1,37 +1,25 @@
-// OpenCode entrypoint for the obedient-ai plugin.
-// The Claude Code plugin injects context/rules.md on SessionStart and registers
-// the skills in skills/. OpenCode does both through ctx.session.hook("context")
-// and ctx.skill.transform.
+// OpenCode entrypoint for the obedient-ai plugin. Runs from dist/opencode, where
+// tools/sync.py puts context.md (the rules named in core/project.json) and skills/
+// beside it. OpenCode injects the rules through ctx.session.hook("context") and
+// registers the skills through ctx.skill.transform.
 
 import { Plugin } from "@opencode/plugin";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const coreRoot = join(fileURLToPath(new URL("../../..", import.meta.url)), "core");
-const contextRoot = join(coreRoot, "context");
-const skillsRoot = join(coreRoot, "skills");
-
-// Injected in this order at the front of every session's system prompt.
-// mini.md is also a Claude Code output style; here its body is injected as plain rules.
-const contextFiles = [
-  join(contextRoot, "rules.md"),
-  join(coreRoot, "output-styles", "mini.md"),
-  join(contextRoot, "rules-opencode.md"),
-];
+const pluginRoot = fileURLToPath(new URL(".", import.meta.url));
+const contextFile = join(pluginRoot, "context.md");
+const skillsRoot = join(pluginRoot, "skills");
 
 async function readContext() {
-  const parts = [];
-  for (const path of contextFiles) {
-    try {
-      parts.push(parseFrontmatter(await readFile(path, "utf8")).body.trim());
-    } catch {
-      // A missing context file is not fatal, but it must not be silent: the
-      // session would look normal while running without its rules.
-      console.warn(`obedient-ai: missing context file ${path}`);
-    }
+  try {
+    return (await readFile(contextFile, "utf8")).trim();
+  } catch {
+    // Not fatal, but never silent: the session would look normal without its rules.
+    console.warn(`obedient-ai: missing context file ${contextFile}`);
+    return "";
   }
-  return parts.join("\n\n");
 }
 
 const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---\r?\n?/;

@@ -9,11 +9,11 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 cd "$(dirname "$0")/.." || exit 1
 
 claude=dist/claude
-for f in core/project.json .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
+for f in core/project.json package.json .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
-for f in core/context/rules.md core/context/rules-opencode.md core/context/rules-antigravity.md dist/antigravity/rules/AGENTS.md dist/pi/APPEND_SYSTEM.md; do
+for f in core/context/rules.md core/context/rules-opencode.md core/context/rules-antigravity.md dist/antigravity/rules/AGENTS.md dist/opencode/context.md dist/pi/APPEND_SYSTEM.md; do
   if [ -s "$f" ]; then ok "$f non-empty"; else bad "$f missing or empty"; fi
 done
 
@@ -25,11 +25,16 @@ done
 scratch=$(mktemp -d)
 tar --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C "$scratch"
 python3 "$scratch/tools/sync.py"
-if diff -r dist "$scratch/dist" >/dev/null 2>&1; then ok "dist/ in sync with core/"; else bad "dist/ out of sync (run tools/sync.py)"; fi
+for path in dist package.json .claude-plugin/marketplace.json; do
+  if diff -r "$path" "$scratch/$path" >/dev/null 2>&1; then ok "$path in sync with core/"; else bad "$path out of sync (run tools/sync.py)"; fi
+done
 rm -rf "$scratch"
 
-for name in $(grep -o '"[a-z-]*\.md"' core/mods/opencode/index.ts | tr -d '"'); do
-  if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in core/mods/opencode/index.ts but missing"; fi
+for ref in $(grep -o 'join(pluginRoot, "[^"]*")' dist/opencode/index.ts | cut -d'"' -f2); do
+  if [ -e "dist/opencode/$ref" ]; then ok "opencode reads $ref"; else bad "dist/opencode/$ref missing (read by index.ts)"; fi
+done
+for path in $(python3 -c 'import json; p = json.load(open("package.json")); print(p["exports"]["."], *p["pi"]["skills"])'); do
+  if [ -e "$path" ]; then ok "package.json points at $path"; else bad "package.json points at missing $path"; fi
 done
 
 for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' dist/claude/obedient-ai/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do

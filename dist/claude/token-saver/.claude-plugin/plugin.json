@@ -1,5 +1,9 @@
 {
   "name": "token-saver",
+  "version": "0.30.2",
+  "author": {
+    "name": "nvkudva"
+  },
   "displayName": "Token Saver",
   "description": "Saves tokens: runs short git prompts without a model turn, trims wasteful Reads and repeat errors, offers a fresh start on unrelated tasks, and can keep the prompt cache warm. Each part has its own switch.",
   "userConfig": {
@@ -51,6 +55,5 @@
       "default": 150000,
       "description": "Sessions smaller than this are left alone."
     }
-  },
-  "version": "0.30.2"
+  }
 }

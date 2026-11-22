@@ -1,7 +1,7 @@
 // Replays your Claude Code transcripts through the quickrun router.
-//   bun quickrun/tools/history.ts eval   which past prompts would have been routed (check for false positives)
-//   bun quickrun/tools/history.ts misses routed prompts where the main model did something else
-//   bun quickrun/tools/history.ts seed   write the run/test commands the main model used per repo to learned.json
+//   bun core/mods/token-saver/tools/history.ts eval   which past prompts would have been routed (check for false positives)
+//   bun core/mods/token-saver/tools/history.ts misses routed prompts where the main model did something else
+//   bun core/mods/token-saver/tools/history.ts seed   write the run/test commands the main model used per repo to learned.json
 import { readdirSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs'
 import { homedir } from 'node:os'
 import { join } from 'node:path'
@@ -130,4 +130,4 @@ const mode = process.argv[2]
 if (mode === 'eval') await evaluate()
 else if (mode === 'misses') await misses()
 else if (mode === 'seed') await seed()
-else console.log('usage: bun quickrun/tools/history.ts eval|misses|seed')
+else console.log('usage: bun core/mods/token-saver/tools/history.ts eval|misses|seed')
