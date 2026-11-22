@@ -42,7 +42,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-rules sh
 
 ## How it works
 
-`adapters/claude/obedient-rules/hooks/hooks.json` registers these hooks:
+`core/claude/obedient-rules/hooks/hooks.json` registers these hooks:
 
 - `SessionStart`: asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it into the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session.
 - `SessionStart`: `hooks/export-scratch.sh` exports `$SCRATCH` (the session scratchpad path) and puts GNU `sed` and `timeout` first on PATH when Homebrew has them.
@@ -55,7 +55,7 @@ There is no per-project override. The reply format (short numbered bullets, supe
 
 The rules payload is `core/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
-OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`, loaded by `adapters/opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
+OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`, loaded by `dist/opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
 Four rules, verbatim, so you can judge the fit before installing:
 
@@ -80,15 +80,15 @@ The skills are split across `obedient-skills` (`polish`, `learn-logs`, `marketin
 | Agent | Rules | Skills | Guard hooks, cacheKeeper, token-guard |
 |---|---|---|---|
 | Claude Code | yes | yes | yes |
-| Antigravity | yes, via `adapters/antigravity/rules/AGENTS.md` (run `agy plugin install ./adapters/antigravity`) | yes (`adapters/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
-| OpenCode | yes, via `adapters/opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
-| pi | copy or symlink `adapters/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
+| Antigravity | yes, via `dist/antigravity/rules/AGENTS.md` (run `agy plugin install ./dist/antigravity`) | yes (`dist/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
+| OpenCode | yes, via `dist/opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
+| pi | copy or symlink `dist/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
 
-Edit only `core/`. Run `./tools/sync.sh` after any change there: it rewrites the generated files in `adapters/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
+Edit only `core/`. Run `./tools/sync.sh` after any change there: it rebuilds `dist/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
 
 ## token-guard
 
-A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir adapters/claude/token-guard`.
+A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir dist/claude/token-guard`.
 
 - Status line shows context percent, cache time left, turns, calls and trimmed count; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
 - A new, unrelated prompt in a session over 150k tokens asks whether to continue, start fresh or compact first.
@@ -105,7 +105,7 @@ Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters
 
 ## quickrun
 
-A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir adapters/claude/quickrun`.
+A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir dist/claude/quickrun`.
 
 - Routes prompts of 6 words or fewer made only of command words and filler: `pull`, `commit`, `merge`, `push`, `release` (also `tag`, `bump`, `version`), `test`, `deploy`, `stop`, `restart`, `run` and combinations (`comit n psuh`, `commit push deploy`). Typos within one edit are matched. `prod` means deploy.
 - `run`, `stop` and `restart` need a target (`run dev`, `stop all servers`, `restart dev server`); a bare `run it` or `stop` goes to the main model, since in past sessions those rarely meant the dev server.
@@ -123,11 +123,11 @@ A third plugin: short command prompts run directly, with no main-model turn. Ins
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun core/claude-mods/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
+`bun core/claude/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
-`core/` is the only place to edit shared content. `adapters/` holds one thin folder per agent; generated files are written by `tools/sync.sh`.
+Edit only `core/`. `dist/` is generated by `tools/sync.sh` and committed, because a GitHub install reads the repo as is. `tools/validate.sh` fails when `dist/` drifts from `core/`.
 
 ```
 core/
@@ -135,22 +135,19 @@ core/
   output-styles/mini.md
   skills/{post,marketing,polish,learn-logs}/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
-  claude-mods/{quickrun,token-guard,cache-keeper}/   Claude Code only; hooks, tests, tools
-adapters/
-  claude/
-    obedient-rules/  hand-written: plugin.json, hooks/{hooks.json,export-scratch.sh}
-                     generated: context/, output-styles/, guard scripts in hooks/
-    obedient-skills/ generated: skills/{polish,learn-logs,marketing}
-    obedient-post/   generated: skills/post
-    quickrun/, token-guard/, cache-keeper/   generated from core/claude-mods/
-  antigravity/     hand-written: plugin.json, hooks.json; generated: rules/AGENTS.md, skills/, hooks/
-  opencode/index.ts   reads core/ directly
-  pi/              generated: APPEND_SYSTEM.md (pi skills read core/skills via package.json)
+  claude/      one folder per Claude Code plugin: manifest, hooks, and for the mods their tests and tools
+    obedient-rules/  obedient-skills/  obedient-post/
+    quickrun/  token-guard/  cache-keeper/            Claude Code only
+  antigravity/ plugin.json, hooks.json
+  opencode/    index.ts
+dist/            generated, never edit
+  claude/<plugin>/   what the marketplace installs (skills, rules and guard scripts copied in; tests left out)
+  antigravity/  opencode/  pi/
 tools/{sync,validate,bootstrap,plugin-usage}.sh, tools/claude-settings.json
 .claude-plugin/marketplace.json
 ```
 
-Adding an agent: one folder under `adapters/`, one block in `tools/sync.sh`, one row in the table above.
+Adding an agent: one folder under `core/`, one block in `tools/sync.sh`, one row in the table above.
 
 ## Status
 

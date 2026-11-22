@@ -8,12 +8,12 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 
 cd "$(dirname "$0")/.." || exit 1
 
-claude=adapters/claude
-for f in .claude-plugin/marketplace.json $claude/obedient-rules/.claude-plugin/plugin.json $claude/obedient-rules/hooks/hooks.json tools/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/cache-keeper/.claude-plugin/plugin.json $claude/cache-keeper/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/obedient-skills/.claude-plugin/plugin.json $claude/obedient-post/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json adapters/antigravity/plugin.json adapters/antigravity/hooks.json; do
+claude=dist/claude
+for f in .claude-plugin/marketplace.json $claude/obedient-rules/.claude-plugin/plugin.json $claude/obedient-rules/hooks/hooks.json tools/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/cache-keeper/.claude-plugin/plugin.json $claude/cache-keeper/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/obedient-skills/.claude-plugin/plugin.json $claude/obedient-post/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
-for f in core/context/rules.md core/context/rules-opencode.md core/context/rules-antigravity.md adapters/antigravity/rules/AGENTS.md adapters/pi/APPEND_SYSTEM.md; do
+for f in core/context/rules.md core/context/rules-opencode.md core/context/rules-antigravity.md dist/antigravity/rules/AGENTS.md dist/pi/APPEND_SYSTEM.md; do
   if [ -s "$f" ]; then ok "$f non-empty"; else bad "$f missing or empty"; fi
 done
 
@@ -25,33 +25,31 @@ done
 scratch=$(mktemp -d)
 tar --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C "$scratch"
 "$scratch/tools/sync.sh"
-for path in $claude/quickrun $claude/token-guard $claude/cache-keeper $claude/obedient-skills/skills $claude/obedient-post/skills $claude/obedient-rules/context $claude/obedient-rules/output-styles $claude/obedient-rules/hooks adapters/antigravity/skills adapters/antigravity/hooks adapters/antigravity/rules adapters/pi; do
-  if diff -r "$path" "$scratch/$path" >/dev/null 2>&1; then ok "$path in sync with core/"; else bad "$path out of sync (run tools/sync.sh)"; fi
-done
+if diff -r dist "$scratch/dist" >/dev/null 2>&1; then ok "dist/ in sync with core/"; else bad "dist/ out of sync (run tools/sync.sh)"; fi
 rm -rf "$scratch"
 
-for name in $(grep -o '"[a-z-]*\.md"' adapters/opencode/index.ts | tr -d '"'); do
-  if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in adapters/opencode/index.ts but missing"; fi
+for name in $(grep -o '"[a-z-]*\.md"' dist/opencode/index.ts | tr -d '"'); do
+  if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in dist/opencode/index.ts but missing"; fi
 done
 
-for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' adapters/claude/obedient-rules/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do
-  if [ -e "adapters/claude/obedient-rules/$ref" ]; then ok "hook path $ref exists"; else bad "hook path $ref missing"; fi
+for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' dist/claude/obedient-rules/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do
+  if [ -e "dist/claude/obedient-rules/$ref" ]; then ok "hook path $ref exists"; else bad "hook path $ref missing"; fi
 done
 
-for ref in $(grep -o '"\./[^"]*"' adapters/claude/obedient-rules/hooks/hooks.json | tr -d '"'); do
-  if [ -e "adapters/claude/obedient-rules/hooks/$ref" ]; then ok "module $ref exists"; else bad "module $ref missing"; fi
+for ref in $(grep -o '"\./[^"]*"' dist/claude/obedient-rules/hooks/hooks.json | tr -d '"'); do
+  if [ -e "dist/claude/obedient-rules/hooks/$ref" ]; then ok "module $ref exists"; else bad "module $ref missing"; fi
 done
 
-for ref in $(grep -o '"\./[^"]*"' adapters/claude/token-guard/hooks/hooks.json | tr -d '"'); do
-  if [ -e "adapters/claude/token-guard/hooks/$ref" ]; then ok "token-guard module $ref exists"; else bad "token-guard module $ref missing"; fi
+for ref in $(grep -o '"\./[^"]*"' dist/claude/token-guard/hooks/hooks.json | tr -d '"'); do
+  if [ -e "dist/claude/token-guard/hooks/$ref" ]; then ok "token-guard module $ref exists"; else bad "token-guard module $ref missing"; fi
 done
 
-for ref in $(grep -o '"\./[^"]*"' adapters/claude/cache-keeper/hooks/hooks.json | tr -d '"'); do
-  if [ -e "adapters/claude/cache-keeper/hooks/$ref" ]; then ok "cache-keeper module $ref exists"; else bad "cache-keeper module $ref missing"; fi
+for ref in $(grep -o '"\./[^"]*"' dist/claude/cache-keeper/hooks/hooks.json | tr -d '"'); do
+  if [ -e "dist/claude/cache-keeper/hooks/$ref" ]; then ok "cache-keeper module $ref exists"; else bad "cache-keeper module $ref missing"; fi
 done
 
-for ref in $(grep -o '"\./[^"]*"' adapters/claude/quickrun/hooks/hooks.json | tr -d '"'); do
-  if [ -e "adapters/claude/quickrun/hooks/$ref" ]; then ok "quickrun module $ref exists"; else bad "quickrun module $ref missing"; fi
+for ref in $(grep -o '"\./[^"]*"' dist/claude/quickrun/hooks/hooks.json | tr -d '"'); do
+  if [ -e "dist/claude/quickrun/hooks/$ref" ]; then ok "quickrun module $ref exists"; else bad "quickrun module $ref missing"; fi
 done
 
 for dir in core/skills/*/; do

@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-# Builds every adapter's generated files from core/. Edit core/, never the outputs.
-# Outputs are real files, not symlinks: a Claude Code plugin is copied to a cache
-# and cannot rely on links leaving its folder.
+# Builds dist/ from core/. Edit core/, never dist/. dist/ is committed because a
+# GitHub marketplace install and `github:` plugin sources read the repo as is.
+# It holds real files, not symlinks: Claude Code copies a plugin to a cache and
+# cannot follow links out of it.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -23,27 +24,29 @@ copy_guards() {
   for f in "${guards[@]}"; do cp "core/guards/$f" "$1/$f"; done
 }
 
-claude=adapters/claude
-rm -rf "$claude/obedient-rules/context" "$claude/obedient-rules/output-styles" "$claude/obedient-rules/skills"
+rm -rf dist
+mkdir -p dist/claude dist/antigravity dist/opencode dist/pi
+
+# Claude Code: one folder per plugin, starting from its skeleton in core/claude.
+claude=dist/claude
+for plugin in core/claude/*/; do
+  name=$(basename "$plugin")
+  cp -R "$plugin" "$claude/$name"
+  find "$claude/$name" -name '*.test.ts' -delete
+done
+rm -rf "$claude/quickrun/tools"
+
 cp -R core/context "$claude/obedient-rules/context"
 cp -R core/output-styles "$claude/obedient-rules/output-styles"
 copy_guards "$claude/obedient-rules/hooks"
 
-rm -rf "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
 mkdir -p "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
 for skill in polish learn-logs marketing; do cp -R "core/skills/$skill" "$claude/obedient-skills/skills/$skill"; done
 cp -R core/skills/post "$claude/obedient-post/skills/post"
 
-# Claude Code mods: source lives in core/claude-mods; the plugin copy ships without tests and dev tools.
-for mod in quickrun token-guard cache-keeper; do
-  rm -rf "$claude/$mod"
-  cp -R "core/claude-mods/$mod" "$claude/$mod"
-  find "$claude/$mod" -name '*.test.ts' -delete
-done
-rm -rf "$claude/quickrun/tools"
-
-agy=adapters/antigravity
-rm -rf "$agy/skills" "$agy/hooks"
+# Antigravity
+agy=dist/antigravity
+cp core/antigravity/plugin.json core/antigravity/hooks.json "$agy/"
 cp -R core/skills "$agy/skills"
 copy_guards "$agy/hooks"
 mkdir -p "$agy/rules"
@@ -56,9 +59,11 @@ mkdir -p "$agy/rules"
   strip_frontmatter core/context/rules-antigravity.md
 } > "$agy/rules/AGENTS.md"
 
+# OpenCode reads core/ at run time; pi installs skills from core/skills via package.json.
+cp core/opencode/index.ts dist/opencode/index.ts
 {
   printf '%s\n\n' "$header"
   strip_frontmatter core/context/rules.md
   printf '\n'
   strip_frontmatter core/output-styles/mini.md
-} > adapters/pi/APPEND_SYSTEM.md
+} > dist/pi/APPEND_SYSTEM.md

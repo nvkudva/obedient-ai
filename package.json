@@ -8,10 +8,10 @@
     "skills": ["./core/skills"]
   },
   "exports": {
-    ".": "./adapters/opencode/index.ts"
+    ".": "./dist/opencode/index.ts"
   },
   "files": [
-    "adapters/opencode",
+    "dist/opencode",
     "core"
   ],
   "dependencies": {

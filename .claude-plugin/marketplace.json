@@ -9,32 +9,32 @@
   "plugins": [
     {
       "name": "obedient-rules",
-      "source": "./adapters/claude/obedient-rules",
+      "source": "./dist/claude/obedient-rules",
       "description": "Standing rules at session start and guard hooks for dangerous git, foreground sleeps and pip install."
     },
     {
       "name": "obedient-skills",
-      "source": "./adapters/claude/obedient-skills",
+      "source": "./dist/claude/obedient-skills",
       "description": "The polish, learn-logs and marketing skills."
     },
     {
       "name": "obedient-post",
-      "source": "./adapters/claude/obedient-post",
+      "source": "./dist/claude/obedient-post",
       "description": "The post skill: LinkedIn and X posts in the author's voice."
     },
     {
       "name": "token-guard",
-      "source": "./adapters/claude/token-guard",
+      "source": "./dist/claude/token-guard",
       "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
     },
     {
       "name": "cache-keeper",
-      "source": "./adapters/claude/cache-keeper",
+      "source": "./dist/claude/cache-keeper",
       "description": "Keeps the prompt cache warm in long idle sessions with cheap pings, then compacts."
     },
     {
       "name": "quickrun",
-      "source": "./adapters/claude/quickrun",
+      "source": "./dist/claude/quickrun",
       "description": "Runs short command prompts (commit, push, run, test, deploy, typos included) directly, without a main-model turn."
     }
   ]
