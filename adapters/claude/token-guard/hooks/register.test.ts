@@ -24,3 +24,32 @@ test('the third identical failure in a turn gets a stop note, once', async ($, o
   }
   expect(notes).toEqual([false, false, true, false])
 })
+
+test('/guard off stops the stop note, /guard on restores it', async ($, on) => {
+  on('session.start', (_, e) => ({ cwd: e.cwd }))
+  on('turn.start', (_, e) => ({ turnId: e.turnId }))
+  on('clock.now', () => ({ value: 0 }))
+  on('session.usage', () => ({ value: { context: {} } }))
+  const store = new Map<string, unknown>()
+  on('store.get', (_: unknown, e: { key: string }) => ({ value: store.get(e.key) }))
+  on('store.set', (_: unknown, e: { key: string; value: unknown }) => (store.set(e.key, e.value), { value: undefined }))
+  on('command.register', () => ({ value: undefined }))
+  on('tool.call', () => ({ isError: true, result: undefined, text: 'Exit code 1\nboom 7' }))
+  await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
+
+  const run = (args: string) => ($ as any).command.run({ command: 'guard', args })
+  const noteCount = async (turnId: string) => {
+    await $.turn.start({ text: 'go', turnId })
+    let notes = 0
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const result = await $.tool.call({ tool: 'Bash', command: 'false' })
+      notes += (result.context ?? []).length
+    }
+    return notes
+  }
+
+  expect((await run('off')).text).toBe('token-guard is off.')
+  expect(await noteCount('t1')).toBe(0)
+  expect((await run('on')).text).toBe('token-guard is on.')
+  expect(await noteCount('t2')).toBe(1)
+})

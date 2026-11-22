@@ -90,7 +90,25 @@ that, the next audit has nothing to compare against.
 
 Do not report model/token cost unless the store has it. Do not infer cost from call counts.
 
-## 6. Finish
+## 6. Turn findings into changes
+
+A ranked list nobody applies is not an audit. For the top three findings, write the change itself,
+not advice:
+
+- a prompt rule: the exact line to add to `rules.md` or `CLAUDE.md`, and which existing line it replaces
+- a hook or config change: the exact diff
+- a code fix: the file and function
+
+Give each one an expected saving (count x the typical cost per call from this audit, labelled as an
+estimate) and a way to check it later (the baseline query, the number that should drop). Then ask
+which to apply as a click, and apply only those. Do not edit anything before that answer.
+
+To see whether the plugins themselves earn their place, also count how often each fired: hook block
+messages by script name, `Skill` calls by skill, quickrun's "Prompt dropped by a hook". Text matches
+can include sessions that only quoted a script, so report them as upper bounds. `tools/plugin-usage.sh`
+in this repo does it for Claude Code.
+
+## 7. Finish
 
 Write the adapter SQL and the baseline output to `$SCRATCH` or the repo's `tools/`, not to the repo
 root. A Python or SQL snippet run twice belongs in a file. State plainly which agents were audited,

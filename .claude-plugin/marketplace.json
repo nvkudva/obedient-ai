@@ -25,7 +25,12 @@
     {
       "name": "token-guard",
       "source": "./adapters/claude/token-guard",
-      "description": "Warns on long sessions, trims wasteful Reads and repeated Bash calls, and keeps the prompt cache warm."
+      "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
+    },
+    {
+      "name": "cache-keeper",
+      "source": "./adapters/claude/cache-keeper",
+      "description": "Keeps the prompt cache warm in long idle sessions with cheap pings, then compacts."
     },
     {
       "name": "quickrun",

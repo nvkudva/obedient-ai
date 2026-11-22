@@ -66,19 +66,30 @@ const touch = async ($: EngineInterface) => {
   await showStatus($)
 }
 
+const IS_OFF_KEY = 'isOff'
+let isGuardOff = false
+
 export const register: Register = on => {
   on('session.start', async ($, e, next) => {
+    isGuardOff = (await $.store.get(IS_OFF_KEY)) === true
     stopTicker?.()
     stopTicker = $.clock.every(15_000, () => void showStatus($))
-    await $.command.register({ name: 'guard', description: 'Show token-guard counters and session hygiene' })
+    await $.command.register({ name: 'guard', description: 'Show token-guard counters; `/guard off` or `on` switches it' })
     return next(e)
   })
 
-  on('command.run', { command: 'guard' }, async $ => {
+  on('command.run', { command: 'guard' }, async ($, e) => {
+    const word = e.args.trim().toLowerCase()
+    if (word === 'on' || word === 'off') {
+      isGuardOff = word === 'off'
+      await $.store.set(IS_OFF_KEY, isGuardOff)
+      return { text: `token-guard is ${word}.` }
+    }
     const home = (await $.env.get('HOME')) ?? ''
     const { stdout } = await $.process.run(['du', '-sh', `${home}/.claude/projects`]).catch(() => ({ stdout: '?' }))
     return {
       text: [
+        ...(isGuardOff ? ['token-guard is off (`/guard on` turns it back on).'] : []),
         `turns ${turns} (warn at ${MAX_TURNS}) · calls ${calls} (warn at ${MAX_CALLS})`,
         `duplicate Reads blocked ${stats.duplicateReadsBlocked} · images downscaled ${stats.imagesDownscaled} · Reads capped ${stats.readsCapped}`,
         `repeat Bash ${stats.repeatBash} · inline patch helpers ${stats.patchHelpers} · failure loops ${stats.failureLoops}`,
@@ -92,7 +103,7 @@ export const register: Register = on => {
     // T3 Code and other SDK hosts deliver typed prompts as `sdk` or `unclassified`, not `composer`.
     const isHumanOrigin = ['composer', 'bridge', 'sdk', 'unclassified'].includes(e.origin.kind)
     const isTypedPrompt = isHumanOrigin && !e.command && !e.isMeta && e.turnId === undefined
-    if (!isTypedPrompt) return next(e)
+    if (isGuardOff || !isTypedPrompt) return next(e)
 
     const { context } = await $.session.usage()
     const contextTokens = context.tokens ?? 0
@@ -124,6 +135,7 @@ export const register: Register = on => {
   })
 
   on('tool.call', async ($, e, next) => {
+    if (isGuardOff) return next(e)
     calls += 1
     void touch($)
     if (calls >= MAX_CALLS && !hasWarnedCalls) {
@@ -156,6 +168,7 @@ export const register: Register = on => {
   })
 
   on('turn.complete', ($, e, next) => {
+    if (isGuardOff) return next(e)
     turns += 1
     void touch($)
     if (turns >= MAX_TURNS && !hasWarnedTurns) {
@@ -166,6 +179,7 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: 'Read' }, async ($, e, next) => {
+    if (isGuardOff) return next(e)
     const stat = await $.fs.stat(e.file_path).catch(() => undefined)
     if (stat === undefined) {
       return { deny: `${e.file_path} not found: locate it with rg --files first.` }
@@ -203,6 +217,7 @@ export const register: Register = on => {
   })
 
   on('tool.call', { tool: 'Bash' }, ($, e, next) => {
+    if (isGuardOff) return next(e)
     if (INLINE_PATCH_HELPER.test(e.command)) {
       stats.patchHelpers += 1
       $.ui.toast('Inline patch helper: save it once as tools/edit.py or use Edit')

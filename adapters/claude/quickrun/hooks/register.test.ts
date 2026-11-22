@@ -49,13 +49,13 @@ test('a handled command is dropped, and the next prompt tells the model what ran
   expect(seen.length).toBe(0)
 
   await submit('explain the greet helper')
-  expect(seen[0]).toContain('committed abc1234')
+  expect(seen[0]).toContain('committed. feat: add greet')
 })
 
 test('a failed push hands the prompt to the model with the error, after the commit', async ($, on) => {
   const { seen, submit } = await setup($, on, [['push', result(1, '', 'rejected: non-fast-forward')]])
   await submit('commit and push')
-  expect(seen[0]).toContain('already did: committed abc1234')
+  expect(seen[0]).toContain('already did: committed. feat: add greet')
   expect(seen[0]).toContain('non-fast-forward')
 })
 
@@ -126,4 +126,14 @@ test('/quickrun reports handled prompts and estimated savings', async ($, on) =>
   expect(report.text).toContain('handled 1 prompts (commit 1)')
   expect(report.text).toContain('~$0.72')
   expect(report.text).toContain('haiku 0 ms (1)')
+})
+
+test('/quickrun off sends command prompts to the model, /quickrun on restores routing', async ($, on) => {
+  const { submit } = await setup($, on)
+  const run = (args: string) => ($ as any).command.run({ command: 'quickrun', args })
+  expect((await run('off')).text).toBe('quickrun is off.')
+  expect((await submit('commit')).drop).toBeUndefined()
+  expect((await run('')).text).toContain('quickrun is off')
+  expect((await run('on')).text).toBe('quickrun is on.')
+  expect((await submit('commit')).drop).toContain('committed')
 })

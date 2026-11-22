@@ -30,6 +30,8 @@ const PAST_TURN_COST: Record<router.Action, { usd: number; seconds: number }> = 
 }
 
 type Outcome = { summary: string; mergedInto?: string } | { handoff: string }
+const IS_OFF_KEY = 'isOff'
+
 type RunRecord = { pid: string; command: string; url?: string; logPath: string }
 type MessageTiming = { model: string; ms: number }
 type Stats = { prompts: number; byAction: Partial<Record<router.Action, number>>; usd: number; seconds: number; messageTimes?: Record<string, { ms: number; count: number }> }
@@ -348,11 +350,19 @@ export const register: Register = (on, options) => {
   on('session.start', async ($, e, next) => {
     cwd = e.cwd
     sessionId = await $.session.id()
-    await $.command.register({ name: 'quickrun', description: 'Show what quickrun handled and the main-model turns it saved' })
+    await $.command.register({ name: 'quickrun', description: 'Show what quickrun handled; `/quickrun off` or `on` switches it' })
     return next(e)
   })
 
-  on('command.run', { command: 'quickrun' }, async $ => ({ text: statsReport((await $.store.get('stats')) as Stats | undefined) }))
+  on('command.run', { command: 'quickrun' }, async ($, e) => {
+    const word = e.args.trim().toLowerCase()
+    if (word === 'on' || word === 'off') {
+      await $.store.set(IS_OFF_KEY, word === 'off')
+      return { text: `quickrun is ${word}.` }
+    }
+    const isOff = (await $.store.get(IS_OFF_KEY)) === true
+    return { text: `${isOff ? 'quickrun is off (`/quickrun on` turns it back on).\n' : ''}${statsReport((await $.store.get('stats')) as Stats | undefined)}` }
+  })
 
   on('prompt.submit', async ($, e, next) => {
     const passOn = async (extra: string[] = []) => {
@@ -362,6 +372,7 @@ export const register: Register = (on, options) => {
       return next(context.length ? { ...e, context } : e)
     }
     if (e.command || e.isMeta || !HUMAN_ORIGINS.has(e.origin.kind)) return passOn()
+    if ((await $.store.get(IS_OFF_KEY)) === true) return passOn()
 
     const actions = router.route(e.text)
     if (!actions) return passOn()
