@@ -62,7 +62,7 @@ Four rules, verbatim, so you can judge the fit before installing:
 
 ## Bootstrap script
 
-`tools/bootstrap.sh` runs only when you run it; no hook calls it. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `tools/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
+`tools/bootstrap.sh` runs only when you run it; no hook calls it. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges the settings written inside the script into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
 
 The plugin also bundles four skills, each loaded lazily when its description matches the request:
 
@@ -143,7 +143,7 @@ dist/            generated, never edit
   antigravity/       plugin.json, hooks.json, rules/AGENTS.md, skills, guard scripts
   opencode/          index.ts, context.md, skills
   pi/                APPEND_SYSTEM.md, skills
-tools/{sync.py,validate.sh,bootstrap.sh}, tools/claude-settings.json
+tools/{sync.py,validate.sh,bootstrap.sh}
 .claude-plugin/marketplace.json, package.json   generated; they stay at the root because Claude Code, OpenCode and pi look there
 ```
 
