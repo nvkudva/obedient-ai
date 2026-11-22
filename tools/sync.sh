@@ -36,13 +36,10 @@ for plugin in core/claude/*/; do
 done
 rm -rf "$claude/quickrun/tools"
 
-cp -R core/context "$claude/obedient-rules/context"
-cp -R core/output-styles "$claude/obedient-rules/output-styles"
-copy_guards "$claude/obedient-rules/hooks"
-
-mkdir -p "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
-for skill in polish learn-logs marketing; do cp -R "core/skills/$skill" "$claude/obedient-skills/skills/$skill"; done
-cp -R core/skills/post "$claude/obedient-post/skills/post"
+cp -R core/context "$claude/obedient-ai/context"
+cp -R core/output-styles "$claude/obedient-ai/output-styles"
+cp -R core/skills "$claude/obedient-ai/skills"
+copy_guards "$claude/obedient-ai/hooks"
 
 # Antigravity
 agy=dist/antigravity

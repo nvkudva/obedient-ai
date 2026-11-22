@@ -5,7 +5,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "f=\"${CLAUDE_PLUGIN_ROOT}/context/rules.md\"; test -s \"$f\" || { echo \"obedient-rules: $f is missing or empty\" >&2; exit 2; }; cat \"$f\""
+            "command": "f=\"${CLAUDE_PLUGIN_ROOT}/context/rules.md\"; test -s \"$f\" || { echo \"obedient-ai: $f is missing or empty\" >&2; exit 2; }; cat \"$f\""
           },
           {
             "type": "command",

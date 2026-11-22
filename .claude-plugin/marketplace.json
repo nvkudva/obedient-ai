@@ -8,19 +8,9 @@
   },
   "plugins": [
     {
-      "name": "obedient-rules",
-      "source": "./dist/claude/obedient-rules",
-      "description": "Standing rules at session start and guard hooks for dangerous git, foreground sleeps and pip install."
-    },
-    {
-      "name": "obedient-skills",
-      "source": "./dist/claude/obedient-skills",
-      "description": "The polish, learn-logs and marketing skills."
-    },
-    {
-      "name": "obedient-post",
-      "source": "./dist/claude/obedient-post",
-      "description": "The post skill: LinkedIn and X posts in the author's voice."
+      "name": "obedient-ai",
+      "source": "./dist/claude/obedient-ai",
+      "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills."
     },
     {
       "name": "token-guard",

@@ -9,7 +9,7 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 cd "$(dirname "$0")/.." || exit 1
 
 claude=dist/claude
-for f in .claude-plugin/marketplace.json $claude/obedient-rules/.claude-plugin/plugin.json $claude/obedient-rules/hooks/hooks.json tools/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/cache-keeper/.claude-plugin/plugin.json $claude/cache-keeper/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/obedient-skills/.claude-plugin/plugin.json $claude/obedient-post/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
+for f in .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-guard/.claude-plugin/plugin.json $claude/token-guard/hooks/hooks.json $claude/cache-keeper/.claude-plugin/plugin.json $claude/cache-keeper/hooks/hooks.json $claude/quickrun/.claude-plugin/plugin.json $claude/quickrun/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
@@ -32,12 +32,12 @@ for name in $(grep -o '"[a-z-]*\.md"' dist/opencode/index.ts | tr -d '"'); do
   if [ -s "core/context/$name" ] || [ -s "core/output-styles/$name" ]; then ok "$name exists"; else bad "$name named in dist/opencode/index.ts but missing"; fi
 done
 
-for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' dist/claude/obedient-rules/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do
-  if [ -e "dist/claude/obedient-rules/$ref" ]; then ok "hook path $ref exists"; else bad "hook path $ref missing"; fi
+for ref in $(grep -o 'CLAUDE_PLUGIN_ROOT}/[^"\\]*' dist/claude/obedient-ai/hooks/hooks.json | sed 's|CLAUDE_PLUGIN_ROOT}/||'); do
+  if [ -e "dist/claude/obedient-ai/$ref" ]; then ok "hook path $ref exists"; else bad "hook path $ref missing"; fi
 done
 
-for ref in $(grep -o '"\./[^"]*"' dist/claude/obedient-rules/hooks/hooks.json | tr -d '"'); do
-  if [ -e "dist/claude/obedient-rules/hooks/$ref" ]; then ok "module $ref exists"; else bad "module $ref missing"; fi
+for ref in $(grep -o '"\./[^"]*"' dist/claude/obedient-ai/hooks/hooks.json | tr -d '"'); do
+  if [ -e "dist/claude/obedient-ai/hooks/$ref" ]; then ok "module $ref exists"; else bad "module $ref missing"; fi
 done
 
 for ref in $(grep -o '"\./[^"]*"' dist/claude/token-guard/hooks/hooks.json | tr -d '"'); do
