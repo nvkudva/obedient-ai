@@ -9,7 +9,7 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 cd "$(dirname "$0")/.." || exit 1
 
 claude=dist/claude
-for f in .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
+for f in core/project.json .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 
@@ -24,8 +24,8 @@ done
 # Generated files must equal a fresh build from core/. Build in a copy so a dirty tree cannot confuse it.
 scratch=$(mktemp -d)
 tar --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C "$scratch"
-"$scratch/tools/sync.sh"
-if diff -r dist "$scratch/dist" >/dev/null 2>&1; then ok "dist/ in sync with core/"; else bad "dist/ out of sync (run tools/sync.sh)"; fi
+python3 "$scratch/tools/sync.py"
+if diff -r dist "$scratch/dist" >/dev/null 2>&1; then ok "dist/ in sync with core/"; else bad "dist/ out of sync (run tools/sync.py)"; fi
 rm -rf "$scratch"
 
 for name in $(grep -o '"[a-z-]*\.md"' dist/opencode/index.ts | tr -d '"'); do

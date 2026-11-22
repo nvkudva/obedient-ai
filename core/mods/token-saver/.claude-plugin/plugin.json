@@ -1,7 +1,6 @@
 {
   "name": "token-saver",
   "displayName": "Token Saver",
-  "version": "0.30.2",
   "description": "Saves tokens: runs short git prompts without a model turn, trims wasteful Reads and repeat errors, offers a fresh start on unrelated tasks, and can keep the prompt cache warm. Each part has its own switch.",
   "userConfig": {
     "isQuickOn": {
