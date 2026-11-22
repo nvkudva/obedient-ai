@@ -51,7 +51,7 @@ There is no per-project override. The reply format (short numbered bullets, supe
 
 The rules payload is `core/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
-OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`. `tools/sync.py` joins the files listed under `rules.opencode` in `core/project.json` into `dist/opencode/context.md`, and `dist/opencode/index.ts` injects it. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
+OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`. `tools/sync.py` joins `core/context/rules.md`, `core/output-styles/mini.md` and `rules-opencode.md` into `dist/opencode/context.md`, and `dist/opencode/index.ts` injects it. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
 Four rules, verbatim, so you can judge the fit before installing:
 
@@ -135,8 +135,7 @@ core/
   output-styles/mini.md
   skills/{post,marketing,polish,learn-logs}/
   hooks/{_common,block-dangerous-git,block-sleep,prefer-fast-tools,export-scratch}.sh
-  project.json        every hand-written setting: name, version, owner, repo, description, guard order,
-                      which rules each agent gets, OpenCode dependencies, and each Claude mod's manifest
+  config.json         every hand-written setting: name, version, repo, description, guard order, each Claude mod's manifest
   mods/
     token-saver/ Claude Code only: hooks/{register,quick,trim,cache}.ts, tests, tools
     opencode/    index.ts, the OpenCode adapter
@@ -149,7 +148,7 @@ tools/{sync.py,validate.sh,bootstrap.sh,plugin-usage.sh}, tools/claude-settings.
 .claude-plugin/marketplace.json, package.json   generated; they stay at the root because Claude Code, OpenCode and pi look there
 ```
 
-Adding an agent: a `rules.<agent>` list in `core/project.json`, one build function in `tools/sync.py`, one row in the table above. Adding a Claude mod: its code in `core/mods/<name>/` and its manifest under `mods` in `core/project.json`.
+Adding an agent: optional `core/context/rules-<agent>.md` for its own rules, one build function in `tools/sync.py`, one row in the table above. Adding a Claude mod: its code in `core/mods/<name>/` and its manifest under `mods` in `core/config.json`.
 
 ## Status
 

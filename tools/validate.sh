@@ -9,7 +9,7 @@ bad() { printf 'FAIL %s\n' "$1"; fail=1; }
 cd "$(dirname "$0")/.." || exit 1
 
 claude=dist/claude
-for f in core/project.json package.json .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
+for f in core/config.json package.json .claude-plugin/marketplace.json $claude/obedient-ai/.claude-plugin/plugin.json $claude/obedient-ai/hooks/hooks.json tools/claude-settings.json $claude/token-saver/.claude-plugin/plugin.json $claude/token-saver/hooks/hooks.json dist/antigravity/plugin.json dist/antigravity/hooks.json; do
   if python3 -m json.tool "$f" >/dev/null 2>&1; then ok "$f parses"; else bad "$f does not parse"; fi
 done
 

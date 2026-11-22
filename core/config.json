@@ -1,7 +1,6 @@
 {
   "name": "obedient-ai",
   "version": "0.30.2",
-  "owner": "nvkudva",
   "repository": "https://github.com/nvkudva/obedient-ai",
   "displayName": "Obedient AI",
   "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills.",
@@ -10,25 +9,6 @@
     "prefer-fast-tools",
     "block-sleep"
   ],
-  "rules": {
-    "antigravity": [
-      "context/rules.md",
-      "output-styles/mini.md",
-      "context/rules-antigravity.md"
-    ],
-    "opencode": [
-      "context/rules.md",
-      "output-styles/mini.md",
-      "context/rules-opencode.md"
-    ],
-    "pi": [
-      "context/rules.md",
-      "output-styles/mini.md"
-    ]
-  },
-  "opencodeDependencies": {
-    "@opencode/plugin": "latest"
-  },
   "mods": {
     "token-saver": {
       "displayName": "Token Saver",
