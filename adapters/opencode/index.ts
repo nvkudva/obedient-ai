@@ -8,16 +8,15 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 
-const packageRoot = fileURLToPath(new URL("..", import.meta.url));
-const pluginRoot = join(packageRoot, "obedient-ai");
-const contextRoot = join(pluginRoot, "context");
-const skillsRoot = join(pluginRoot, "skills");
+const coreRoot = join(fileURLToPath(new URL("../..", import.meta.url)), "core");
+const contextRoot = join(coreRoot, "context");
+const skillsRoot = join(coreRoot, "skills");
 
 // Injected in this order at the front of every session's system prompt.
 // mini.md is also a Claude Code output style; here its body is injected as plain rules.
 const contextFiles = [
   join(contextRoot, "rules.md"),
-  join(pluginRoot, "output-styles", "mini.md"),
+  join(coreRoot, "output-styles", "mini.md"),
   join(contextRoot, "rules-opencode.md"),
 ];
 

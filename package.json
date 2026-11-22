@@ -5,16 +5,14 @@
   "type": "module",
   "keywords": ["pi-package"],
   "pi": {
-    "skills": ["./obedient-ai/skills"]
+    "skills": ["./core/skills"]
   },
   "exports": {
-    ".": "./opencode/index.ts"
+    ".": "./adapters/opencode/index.ts"
   },
   "files": [
-    "opencode",
-    "obedient-ai/context",
-    "obedient-ai/output-styles",
-    "obedient-ai/skills"
+    "adapters/opencode",
+    "core"
   ],
   "dependencies": {
     "@opencode/plugin": "latest"

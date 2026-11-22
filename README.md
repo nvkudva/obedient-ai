@@ -39,7 +39,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 ## How it works
 
-`obedient-ai/hooks/hooks.json` registers these hooks:
+`adapters/claude/obedient-ai/hooks/hooks.json` registers these hooks:
 
 - `SessionStart`: asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it into the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session.
 - `SessionStart`: `hooks/export-scratch.sh` exports `$SCRATCH` (the session scratchpad path) and puts GNU `sed` and `timeout` first on PATH when Homebrew has them.
@@ -48,11 +48,11 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 - `PreToolUse:Bash`: `prefer-fast-tools.sh` blocks `pip install` when `uv` is installed. Bypass with `ALLOW_SLOW_TOOL=1`.
 - `modules`: `hooks/cacheKeeper.ts` is a keep-alive. After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens. Set the three values in the plugin's user config; raise `minTokens` very high to effectively disable it.
 
-There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `obedient-ai/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-ai:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
+There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `core/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-ai:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
 
-The rules payload is `obedient-ai/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
+The rules payload is `core/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
-OpenCode uses the same `rules.md` plus a second file, `obedient-ai/context/rules-opencode.md`, loaded by `opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
+OpenCode uses the same `rules.md` plus a second file, `core/context/rules-opencode.md`, loaded by `adapters/opencode/index.ts`. Anything that is only true in OpenCode lives there — tool names (`shell` not `bash`), background jobs, subagent names, and the fact that the git guard hooks do not run — so the shared `rules.md` stays valid in every harness.
 
 Four rules, verbatim, so you can judge the fit before installing:
 
@@ -63,29 +63,29 @@ Four rules, verbatim, so you can judge the fit before installing:
 
 ## Setup script
 
-`obedient-ai/setup.sh` runs only from the plugin's `Setup` hook, which fires on `claude --init-only`, not on every session. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `obedient-ai/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
+`adapters/claude/obedient-ai/setup.sh` runs only from the plugin's `Setup` hook, which fires on `claude --init-only`, not on every session. It installs Homebrew if missing (`curl | bash` of the official installer), runs `brew install` for 18 CLI tools the rules expect (ripgrep, fd, ast-grep, jq, yq, duckdb, sd, bun, watchexec, difftastic, jc, htmlq, scc, ruff, gitleaks, gnu-sed, coreutils, bash), then merges `adapters/claude/obedient-ai/claude-settings.json` into `~/.claude/settings.json`: a read-only Bash allowlist, `CLAUDE_CODE_SHELL`, and an auto-compact window. Your existing keys win over ours, and the old file is saved as `~/.claude/settings.json.bak`. Do not run it if you do not want Homebrew packages installed.
 
 The plugin also bundles four skills, each loaded lazily when its description matches the request:
 
-- `polish` (`obedient-ai/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
-- `post` (`obedient-ai/skills/post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
-- `marketing` (`obedient-ai/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video (it first asks desktop 16:9, mobile 9:16 or both; desktop is the default), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
-- `learn-logs` (`obedient-ai/skills/learn-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
+- `polish` (`core/skills/polish/SKILL.md`) polishes any codebase without changing behavior: dead code removal, folder reorganization, file and function renames, test and doc tidy-up. It plans first, waits for approval, then commits one step at a time, following the code style rules in `rules.md`.
+- `post` (`core/skills/post/SKILL.md`) drafts LinkedIn posts in the author's voice. Drop a `voice.md` at `~/.config/obedient-ai/voice.md` to replace the built-in persona; the post-structure rules still apply.
+- `marketing` (`core/skills/marketing/SKILL.md`) analyses a project and builds a launch kit: a Remotion video (it first asks desktop 16:9, mobile 9:16 or both; desktop is the default), LinkedIn, X and Instagram posts, and a review-agent loop that iterates until the output is ship-quality. It needs Node and ffmpeg, and loads the separately installed `remotion-best-practices` skill.
+- `learn-logs` (`core/skills/learn-logs/SKILL.md`) audits a coding agent's own session logs for failures, repeated calls, latency and wasted context. It ships two DuckDB adapters, `queries/opencode.sql` and `queries/claude-code.sql`, both run against real stores before shipping, and encodes the traps that produce wrong conclusions — turn wall clock masquerading as tool latency, the legacy `part` table truncating the window, and shell calls that exit non-zero while reporting `completed`. Needs `duckdb`.
 
 ## Other agents
 
 | Agent | Rules | Skills | Guard hooks, cacheKeeper, token-guard |
 |---|---|---|---|
 | Claude Code | yes | yes | yes |
-| Antigravity | yes, via `antigravity/rules/AGENTS.md` (run `agy plugin install ./antigravity`) | yes (`antigravity/skills` → `obedient-ai/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
-| OpenCode | yes, via `opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
-| pi | copy or symlink `pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
+| Antigravity | yes, via `adapters/antigravity/rules/AGENTS.md` (run `agy plugin install ./adapters/antigravity`) | yes (`adapters/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
+| OpenCode | yes, via `adapters/opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
+| pi | copy or symlink `adapters/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
 
-Run `./tools/sync-targets.sh` after editing `obedient-ai/context/` or `obedient-ai/output-styles/mini.md` to regenerate `antigravity/rules/AGENTS.md` and `pi/APPEND_SYSTEM.md`. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
+Edit only `core/`. Run `./tools/sync.sh` after any change there: it rewrites the generated files in `adapters/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
 
 ## token-guard
 
-A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir token-guard`.
+A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir adapters/claude/token-guard`.
 
 - Status line shows context percent, cache time left, turns, calls and trimmed count; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
 - A new, unrelated prompt in a session over 150k tokens asks whether to continue, start fresh or compact first.
@@ -102,7 +102,7 @@ Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters
 
 ## quickrun
 
-A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir quickrun`.
+A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir adapters/claude/quickrun`.
 
 - Routes prompts of 6 words or fewer made only of command words and filler: `pull`, `commit`, `merge`, `push`, `release` (also `tag`, `bump`, `version`), `test`, `deploy`, `stop`, `restart`, `run` and combinations (`comit n psuh`, `commit push deploy`). Typos within one edit are matched. `prod` means deploy.
 - `run`, `stop` and `restart` need a target (`run dev`, `stop all servers`, `restart dev server`); a bare `run it` or `stop` goes to the main model, since in past sessions those rarely meant the dev server.
@@ -120,47 +120,32 @@ A third plugin: short command prompts run directly, with no main-model turn. Ins
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
+`bun adapters/claude/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
+`core/` is the only place to edit shared content. `adapters/` holds one thin folder per agent; generated files are written by `tools/sync.sh`.
+
 ```
-.claude-plugin/marketplace.json
-.github/workflows/validate.yml
-opencode/index.ts
-tools/validate.sh
-obedient-ai/
-  .claude-plugin/plugin.json
-  hooks/hooks.json
-  hooks/{block-dangerous-git,block-sleep,prefer-fast-tools,export-scratch}.sh
-  hooks/cacheKeeper.ts
-  setup.sh
-  claude-settings.json
-  context/rules.md
-  context/rules-opencode.md
+core/
+  context/{rules,rules-opencode,rules-antigravity}.md
   output-styles/mini.md
-  skills/post/SKILL.md
-  skills/marketing/SKILL.md
-  skills/polish/SKILL.md
-  skills/learn-logs/SKILL.md
-  skills/learn-logs/queries/opencode.sql
-  skills/learn-logs/queries/claude-code.sql
-  skills/marketing/templates/{theme.ts,ui.tsx}
-token-guard/
-  .claude-plugin/plugin.json
-  hooks/hooks.json
-  hooks/register.ts
-quickrun/
-  .claude-plugin/plugin.json
-  hooks/hooks.json
-  hooks/register.ts
-  hooks/router.ts
-  hooks/project.ts
-  hooks/release.ts
-  hooks/router.test.ts
-  hooks/register.test.ts
-  tools/history.ts
+  skills/{post,marketing,polish,learn-logs}/
+  guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
+adapters/
+  claude/
+    obedient-ai/   hand-written: plugin.json, hooks/{hooks.json,cacheKeeper.ts,export-scratch.sh}, setup.sh, claude-settings.json
+                   generated: skills/, context/, output-styles/, guard scripts in hooks/
+    token-guard/   Claude Code only
+    quickrun/      Claude Code only
+  antigravity/     hand-written: plugin.json, hooks.json; generated: rules/AGENTS.md, skills/, hooks/
+  opencode/index.ts   reads core/ directly
+  pi/              generated: APPEND_SYSTEM.md (pi skills read core/skills via package.json)
+tools/{sync,validate}.sh
+.claude-plugin/marketplace.json
 ```
+
+Adding an agent: one folder under `adapters/`, one block in `tools/sync.sh`, one row in the table above.
 
 ## Status
 
