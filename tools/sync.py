@@ -3,8 +3,8 @@
 
 The only hand-written facts are in core/project.json (name, version, owner, repo,
 description, guard order). Manifests, hook wiring and the marketplace file are
-generated from it. Real code stays hand-written: core/configs/ holds
-export-scratch.sh and the OpenCode adapter, core/mods/ holds the Claude Code mods.
+generated from it. Real code stays hand-written: core/hooks, core/opencode and
+core/mods (the Claude Code mods).
 
 dist/ is committed because a GitHub install reads the repo as is. It holds real
 files, not symlinks: Claude Code copies a plugin to a cache and cannot follow
@@ -36,7 +36,7 @@ def strip_frontmatter(path: Path) -> str:
 def copy_guards(target: Path) -> None:
     target.mkdir(parents=True, exist_ok=True)
     for name in guard_files:
-        shutil.copy(core / "guards" / name, target / name)
+        shutil.copy(core / "hooks" / name, target / name)
 
 
 def copy_plugin(source: Path, target: Path) -> None:
@@ -51,11 +51,11 @@ def stamp_version(manifest_path: Path) -> None:
 def build_claude() -> None:
     claude = dist / "claude"
     plugin = claude / project["name"]
-    copy_plugin(core / "configs" / "claude" / project["name"], plugin)
     shutil.copytree(core / "context", plugin / "context")
     shutil.copytree(core / "output-styles", plugin / "output-styles")
     shutil.copytree(core / "skills", plugin / "skills")
     copy_guards(plugin / "hooks")
+    shutil.copy(core / "hooks" / "export-scratch.sh", plugin / "hooks" / "export-scratch.sh")
 
     write_json(plugin / ".claude-plugin" / "plugin.json", {
         "name": project["name"], "displayName": project["displayName"],
@@ -103,7 +103,7 @@ def build_antigravity() -> None:
 
 def build_opencode_and_pi() -> None:
     (dist / "opencode").mkdir()
-    shutil.copy(core / "configs" / "opencode" / "index.ts", dist / "opencode" / "index.ts")
+    shutil.copy(core / "opencode" / "index.ts", dist / "opencode" / "index.ts")
     (dist / "pi").mkdir()
     rules = [strip_frontmatter(core / "context" / "rules.md"), strip_frontmatter(core / "output-styles" / "mini.md")]
     (dist / "pi" / "APPEND_SYSTEM.md").write_text(GENERATED + "\n\n" + "\n".join(rules))

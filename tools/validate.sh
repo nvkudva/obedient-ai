@@ -64,14 +64,14 @@ check_hook() {
   fi
 }
 
-check_hook core/guards/block-dangerous-git.sh '{"tool_input":{"command":"git reset --hard"}}' 2 'BLOCKED by block-dangerous-git.sh' 'git claude deny'
-check_hook core/guards/block-dangerous-git.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"git reset --hard"}}}' 0 '"decision":"deny"' 'git agy deny'
-check_hook core/guards/block-dangerous-git.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"git status"}}}' 0 '"decision":"allow"' 'git agy allow'
-check_hook core/guards/block-sleep.sh '{"tool_input":{"command":"sleep 30"}}' 2 'BLOCKED by block-sleep.sh' 'sleep claude deny'
-check_hook core/guards/block-sleep.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"sleep 30"}}}' 0 '"decision":"deny"' 'sleep agy deny'
+check_hook core/hooks/block-dangerous-git.sh '{"tool_input":{"command":"git reset --hard"}}' 2 'BLOCKED by block-dangerous-git.sh' 'git claude deny'
+check_hook core/hooks/block-dangerous-git.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"git reset --hard"}}}' 0 '"decision":"deny"' 'git agy deny'
+check_hook core/hooks/block-dangerous-git.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"git status"}}}' 0 '"decision":"allow"' 'git agy allow'
+check_hook core/hooks/block-sleep.sh '{"tool_input":{"command":"sleep 30"}}' 2 'BLOCKED by block-sleep.sh' 'sleep claude deny'
+check_hook core/hooks/block-sleep.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"sleep 30"}}}' 0 '"decision":"deny"' 'sleep agy deny'
 if command -v uv >/dev/null 2>&1; then
-  check_hook core/guards/prefer-fast-tools.sh '{"tool_input":{"command":"pip install foo"}}' 2 'BLOCKED by prefer-fast-tools.sh' 'pip claude deny'
-  check_hook core/guards/prefer-fast-tools.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"pip install foo"}}}' 0 '"decision":"deny"' 'pip agy deny'
+  check_hook core/hooks/prefer-fast-tools.sh '{"tool_input":{"command":"pip install foo"}}' 2 'BLOCKED by prefer-fast-tools.sh' 'pip claude deny'
+  check_hook core/hooks/prefer-fast-tools.sh '{"toolCall":{"name":"run_command","args":{"CommandLine":"pip install foo"}}}' 0 '"decision":"deny"' 'pip agy deny'
 fi
 
 if [ "$fail" -ne 0 ]; then echo "validate: failures above"; exit 1; fi
