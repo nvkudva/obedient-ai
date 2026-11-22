@@ -123,7 +123,7 @@ A third plugin: short command prompts run directly, with no main-model turn. Ins
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun adapters/claude/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
+`bun core/claude-mods/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
@@ -135,15 +135,14 @@ core/
   output-styles/mini.md
   skills/{post,marketing,polish,learn-logs}/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
+  claude-mods/{quickrun,token-guard,cache-keeper}/   Claude Code only; hooks, tests, tools
 adapters/
   claude/
     obedient-rules/  hand-written: plugin.json, hooks/{hooks.json,export-scratch.sh}
                      generated: context/, output-styles/, guard scripts in hooks/
     obedient-skills/ generated: skills/{polish,learn-logs,marketing}
     obedient-post/   generated: skills/post
-    token-guard/     Claude Code only
-    cache-keeper/    Claude Code only; hooks/cacheKeeper.ts
-    quickrun/      Claude Code only
+    quickrun/, token-guard/, cache-keeper/   generated from core/claude-mods/
   antigravity/     hand-written: plugin.json, hooks.json; generated: rules/AGENTS.md, skills/, hooks/
   opencode/index.ts   reads core/ directly
   pi/              generated: APPEND_SYSTEM.md (pi skills read core/skills via package.json)

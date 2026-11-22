@@ -34,6 +34,14 @@ mkdir -p "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
 for skill in polish learn-logs marketing; do cp -R "core/skills/$skill" "$claude/obedient-skills/skills/$skill"; done
 cp -R core/skills/post "$claude/obedient-post/skills/post"
 
+# Claude Code mods: source lives in core/claude-mods; the plugin copy ships without tests and dev tools.
+for mod in quickrun token-guard cache-keeper; do
+  rm -rf "$claude/$mod"
+  cp -R "core/claude-mods/$mod" "$claude/$mod"
+  find "$claude/$mod" -name '*.test.ts' -delete
+done
+rm -rf "$claude/quickrun/tools"
+
 agy=adapters/antigravity
 rm -rf "$agy/skills" "$agy/hooks"
 cp -R core/skills "$agy/skills"

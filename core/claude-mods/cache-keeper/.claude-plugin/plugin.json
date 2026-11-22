@@ -1,0 +1,25 @@
+{
+  "name": "cache-keeper",
+  "version": "0.30.2",
+  "description": "Keeps the prompt cache warm in long idle sessions with cheap pings, then compacts.",
+  "userConfig": {
+    "intervalMinutes": {
+      "type": "number",
+      "title": "Idle minutes before each step",
+      "description": "Cache TTL minus a margin: 55 for the 1-hour TTL, 4 for the 5-minute TTL.",
+      "default": 55
+    },
+    "maxPings": {
+      "type": "number",
+      "title": "Keep-alive pings before compacting",
+      "description": "Pings sent while idle; the next idle step compacts.",
+      "default": 2
+    },
+    "minTokens": {
+      "type": "number",
+      "title": "Minimum context tokens",
+      "description": "Sessions smaller than this are left alone.",
+      "default": 150000
+    }
+  }
+}

@@ -25,7 +25,7 @@ done
 scratch=$(mktemp -d)
 tar --exclude=node_modules --exclude=.git -cf - . | tar -xf - -C "$scratch"
 "$scratch/tools/sync.sh"
-for path in $claude/obedient-skills/skills $claude/obedient-post/skills $claude/obedient-rules/context $claude/obedient-rules/output-styles $claude/obedient-rules/hooks adapters/antigravity/skills adapters/antigravity/hooks adapters/antigravity/rules adapters/pi; do
+for path in $claude/quickrun $claude/token-guard $claude/cache-keeper $claude/obedient-skills/skills $claude/obedient-post/skills $claude/obedient-rules/context $claude/obedient-rules/output-styles $claude/obedient-rules/hooks adapters/antigravity/skills adapters/antigravity/hooks adapters/antigravity/rules adapters/pi; do
   if diff -r "$path" "$scratch/$path" >/dev/null 2>&1; then ok "$path in sync with core/"; else bad "$path out of sync (run tools/sync.sh)"; fi
 done
 rm -rf "$scratch"
