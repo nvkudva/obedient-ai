@@ -8,8 +8,8 @@
   },
   "plugins": [
     {
-      "name": "obedient-ai",
-      "source": "./adapters/claude/obedient-ai",
+      "name": "obedient-rules",
+      "source": "./adapters/claude/obedient-rules",
       "description": "Standing rules at session start and guard hooks for dangerous git, foreground sleeps and pip install."
     },
     {

@@ -24,10 +24,10 @@ copy_guards() {
 }
 
 claude=adapters/claude
-rm -rf "$claude/obedient-ai/context" "$claude/obedient-ai/output-styles" "$claude/obedient-ai/skills"
-cp -R core/context "$claude/obedient-ai/context"
-cp -R core/output-styles "$claude/obedient-ai/output-styles"
-copy_guards "$claude/obedient-ai/hooks"
+rm -rf "$claude/obedient-rules/context" "$claude/obedient-rules/output-styles" "$claude/obedient-rules/skills"
+cp -R core/context "$claude/obedient-rules/context"
+cp -R core/output-styles "$claude/obedient-rules/output-styles"
+copy_guards "$claude/obedient-rules/hooks"
 
 rm -rf "$claude/obedient-skills/skills" "$claude/obedient-post/skills"
 mkdir -p "$claude/obedient-skills/skills" "$claude/obedient-post/skills"

@@ -1,6 +1,6 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with six plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, and guard hooks for dangerous git, foreground sleeps and `pip install`. `obedient-skills` adds the `polish`, `learn-logs` and `marketing` skills; `obedient-post` adds the `post` skill. `token-guard` warns before a session gets expensive and trims wasteful Reads. `cache-keeper` keeps the prompt cache warm in long idle sessions. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with six plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-rules` injects standing rules into every session, an optional output style, and guard hooks for dangerous git, foreground sleeps and `pip install`. `obedient-skills` adds the `polish`, `learn-logs` and `marketing` skills; `obedient-post` adds the `post` skill. `token-guard` warns before a session gets expensive and trims wasteful Reads. `cache-keeper` keeps the prompt cache warm in long idle sessions. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
@@ -17,7 +17,7 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 
 ```bash
 claude plugin marketplace add nvkudva/obedient-ai
-claude plugin install obedient-ai@obedient-ai
+claude plugin install obedient-rules@obedient-ai
 claude plugin install obedient-skills@obedient-ai   # optional: polish, learn-logs, marketing skills
 claude plugin install obedient-post@obedient-ai     # optional: the post skill
 claude plugin install token-guard@obedient-ai       # optional: cost warnings, trims wasteful reads
@@ -27,7 +27,7 @@ claude plugin install quickrun@obedient-ai      # optional: runs short command p
 
 The marketplace holds six separate plugins; installing one does not install the others. Turn one off without uninstalling: `claude plugin disable quickrun@obedient-ai`. Inside a session, `/quickrun off` and `/guard off` pause quickrun and token-guard (`on` resumes); the choice is stored. The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
 
-From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
+From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-rules@obedient-ai`.
 
 From a local clone:
 
@@ -38,11 +38,11 @@ claude plugin marketplace add ./obedient-ai
 
 On claude.ai: **Settings → Capabilities → Plugins → Add marketplace**, enter `nvkudva/obedient-ai`, then toggle **obedient-ai** on.
 
-Start a new session and run `/plugin` or `claude plugin list`; obedient-ai should be listed as installed. Existing sessions need a restart.
+Start a new session and run `/plugin` or `claude plugin list`; obedient-rules should be listed as installed. Existing sessions need a restart.
 
 ## How it works
 
-`adapters/claude/obedient-ai/hooks/hooks.json` registers these hooks:
+`adapters/claude/obedient-rules/hooks/hooks.json` registers these hooks:
 
 - `SessionStart`: asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it into the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session.
 - `SessionStart`: `hooks/export-scratch.sh` exports `$SCRATCH` (the session scratchpad path) and puts GNU `sed` and `timeout` first on PATH when Homebrew has them.
@@ -51,7 +51,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 - `PreToolUse:Bash`: `prefer-fast-tools.sh` blocks `pip install` when `uv` is installed. Bypass with `ALLOW_SLOW_TOOL=1`.
 
 
-There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `core/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-ai:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
+There is no per-project override. The reply format (short numbered bullets, superscript numbers, lettered options) lives in one file, `core/output-styles/mini.md`. In Claude Code it is an output style: select it with `/output-style` or `"outputStyle": "obedient-rules:mini"` in settings, and switch to any other style the same way. The OpenCode adapter injects the same file as plain rules. Keep no copy in `~/.claude/output-styles/`.
 
 The rules payload is `core/context/rules.md`: working style, writing code, code and coding style, reading and searching, delegation, project memory (`AGENTS.md`/`PLAN.md`/`TODO.md`), session hygiene, efficiency, and guardrails and browser. It assumes tools such as `trash`, `rg`, `uv` and the `handoff` agent; edit `rules.md` to match your machine.
 
@@ -137,7 +137,7 @@ core/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
 adapters/
   claude/
-    obedient-ai/     hand-written: plugin.json, hooks/{hooks.json,export-scratch.sh}
+    obedient-rules/  hand-written: plugin.json, hooks/{hooks.json,export-scratch.sh}
                      generated: context/, output-styles/, guard scripts in hooks/
     obedient-skills/ generated: skills/{polish,learn-logs,marketing}
     obedient-post/   generated: skills/post

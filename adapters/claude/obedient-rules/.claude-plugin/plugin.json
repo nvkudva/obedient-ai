@@ -1,6 +1,6 @@
 {
-  "name": "obedient-ai",
-  "displayName": "Obedient AI",
+  "name": "obedient-rules",
+  "displayName": "Obedient Rules",
   "version": "0.30.2",
   "description": "Loads standing rules at session start and guards against dangerous git, foreground sleeps and pip install."
 }
