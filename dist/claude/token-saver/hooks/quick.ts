@@ -1,4 +1,4 @@
-import type { EngineInterface, Register } from 'claude-code'
+import type { EngineInterface } from 'claude-code'
 import * as router from './router'
 import * as project from './project'
 import * as release from './release'
@@ -30,8 +30,6 @@ const PAST_TURN_COST: Record<router.Action, { usd: number; seconds: number }> = 
 }
 
 type Outcome = { summary: string; mergedInto?: string } | { handoff: string }
-const IS_OFF_KEY = 'isOff'
-
 type RunRecord = { pid: string; command: string; url?: string; logPath: string }
 type MessageTiming = { model: string; ms: number }
 type Stats = { prompts: number; byAction: Partial<Record<router.Action, number>>; usd: number; seconds: number; messageTimes?: Record<string, { ms: number; count: number }> }
@@ -42,11 +40,11 @@ let cwd = '.'
 let sessionId = 'unknown'
 
 const tail = (text: string) => (text.length > MAX_OUTPUT_TAIL ? `…${text.slice(-MAX_OUTPUT_TAIL)}` : text)
-const quickrunDir = async ($: EngineInterface) => `${(await $.env.get('HOME')) ?? '~'}/.claude/quickrun`
-const learnedPath = async ($: EngineInterface) => `${await quickrunDir($)}/learned.json`
+async function quickrunDir($: EngineInterface) { return `${(await $.env.get('HOME')) ?? '~'}/.claude/quickrun` }
+async function learnedPath($: EngineInterface) { return `${await quickrunDir($)}/learned.json` }
 const notesKey = () => `notes:${sessionId}`
 
-const readJson = async ($: EngineInterface, path: string) => {
+async function readJson($: EngineInterface, path: string) {
   const text = await $.fs.read(path).catch(() => undefined)
   try {
     return text === undefined ? {} : JSON.parse(text)
@@ -55,17 +53,17 @@ const readJson = async ($: EngineInterface, path: string) => {
   }
 }
 
-const takeNotes = async ($: EngineInterface) => {
+async function takeNotes($: EngineInterface) {
   const notes = ((await $.store.get(notesKey())) as string[] | undefined) ?? []
   if (notes.length) await $.store.delete(notesKey())
   return notes
 }
-const addNotes = async ($: EngineInterface, notes: string[]) => {
+async function addNotes($: EngineInterface, notes: string[]) {
   const kept = ((await $.store.get(notesKey())) as string[] | undefined) ?? []
   await $.store.set(notesKey(), [...kept, ...notes])
 }
 
-const recordStats = async ($: EngineInterface, actions: router.Action[], timing?: MessageTiming) => {
+async function recordStats($: EngineInterface, actions: router.Action[], timing?: MessageTiming) {
   const stats = ((await $.store.get('stats')) as Stats | undefined) ?? { prompts: 0, byAction: {}, usd: 0, seconds: 0 }
   // One handled prompt replaced one main-model turn, so count its costliest action, not the sum.
   const costliest = actions.map(action => PAST_TURN_COST[action]).sort((a, b) => b.usd - a.usd)[0]
@@ -89,7 +87,7 @@ const statsReport = (stats: Stats | undefined) => {
   return `quickrun handled ${stats.prompts} prompts (${actions}). Estimated main-model turns avoided: ~$${stats.usd.toFixed(2)} and ~${Math.round(stats.seconds / 60)} min${messageAverage}.`
 }
 
-const loadProject = async ($: EngineInterface): Promise<project.Project> => {
+async function loadProject($: EngineInterface): Promise<project.Project> {
   const entries = await $.fs.list(cwd).catch(() => [])
   const files = new Set(entries.map(entry => entry.name))
   const learned = await readJson($, await learnedPath($))
@@ -101,7 +99,7 @@ const loadProject = async ($: EngineInterface): Promise<project.Project> => {
   }
 }
 
-const remember = async ($: EngineInterface, action: project.ProjectAction, command: string) => {
+async function remember($: EngineInterface, action: project.ProjectAction, command: string) {
   const path = await learnedPath($)
   const learned = await readJson($, path)
   learned[cwd] = { ...learned[cwd], [action]: command }
@@ -109,13 +107,14 @@ const remember = async ($: EngineInterface, action: project.ProjectAction, comma
 }
 
 // Through sh, because $.process.run turns repo hooks off for a direct git call; pre-commit and pre-push must run.
-const git = ($: EngineInterface, ...args: string[]) => $.process.run(['sh', '-c', 'exec git "$@"', 'git', ...args], { cwd })
-const shell = ($: EngineInterface, command: string, timeoutMs: number) =>
-  $.process.run(['sh', '-c', command], { cwd, timeoutMs })
-const isAlive = async ($: EngineInterface, pid: string) => (await $.process.run(['kill', '-0', pid])).exitCode === 0
-const currentBranch = async ($: EngineInterface) => (await git($, 'rev-parse', '--abbrev-ref', 'HEAD')).stdout.trim()
+function git($: EngineInterface, ...args: string[]) { return $.process.run(['sh', '-c', 'exec git "$@"', 'git', ...args], { cwd }) }
+function shell($: EngineInterface, command: string, timeoutMs: number) {
+  return $.process.run(['sh', '-c', command], { cwd, timeoutMs })
+}
+async function isAlive($: EngineInterface, pid: string) { return (await $.process.run(['kill', '-0', pid])).exitCode === 0 }
+async function currentBranch($: EngineInterface) { return (await git($, 'rev-parse', '--abbrev-ref', 'HEAD')).stdout.trim() }
 
-const commitMessage = async ($: EngineInterface, model: string, diff: string) => {
+async function commitMessage($: EngineInterface, model: string, diff: string) {
   const startedAt = await $.clock.now()
   const prompt = `Write the commit message for this staged diff:\n\n${diff}`
   const reply = await $.model.complete({ model, effort: 'low', maxTokens: 200, timeoutMs: 15_000, system: COMMIT_SYSTEM, prompt })
@@ -123,7 +122,7 @@ const commitMessage = async ($: EngineInterface, model: string, diff: string) =>
   return { message, timing: { model, ms: (await $.clock.now()) - startedAt } }
 }
 
-const commit = async ($: EngineInterface, model: string, timings: MessageTiming[]): Promise<Outcome> => {
+async function commit($: EngineInterface, model: string, timings: MessageTiming[]): Promise<Outcome> {
   await git($, 'add', '-A')
   const staged = (await git($, 'diff', '--cached', '--name-only')).stdout.split('\n').filter(Boolean)
   if (staged.length === 0) return { summary: 'nothing to commit' }
@@ -142,7 +141,7 @@ const commit = async ($: EngineInterface, model: string, timings: MessageTiming[
   return { summary: `committed. ${message.split('\n')[0]}` }
 }
 
-const defaultBranch = async ($: EngineInterface) => {
+async function defaultBranch($: EngineInterface) {
   const originHead = (await git($, 'symbolic-ref', '--short', 'refs/remotes/origin/HEAD')).stdout.trim()
   if (originHead) return originHead.replace(/^origin\//, '')
   for (const name of ['main', 'master']) {
@@ -151,14 +150,14 @@ const defaultBranch = async ($: EngineInterface) => {
   return undefined
 }
 
-const worktreeOf = async ($: EngineInterface, branch: string) => {
+async function worktreeOf($: EngineInterface, branch: string) {
   const blocks = (await git($, 'worktree', 'list', '--porcelain')).stdout.split('\n\n')
   const block = blocks.find(lines => lines.split('\n').includes(`branch refs/heads/${branch}`))
   return block?.match(/^worktree (.+)$/m)?.[1]
 }
 
 // Fast-forward only: anything that needs a real merge or a rebase is the main model's job.
-const merge = async ($: EngineInterface): Promise<Outcome> => {
+async function merge($: EngineInterface): Promise<Outcome> {
   const target = await defaultBranch($)
   const source = await currentBranch($)
   if (!target) return { handoff: 'no main or master branch found to merge into.' }
@@ -172,7 +171,7 @@ const merge = async ($: EngineInterface): Promise<Outcome> => {
   return { summary: `merged. ${source} into ${target}`, mergedInto: target }
 }
 
-const push = async ($: EngineInterface, branch: string | undefined): Promise<Outcome> => {
+async function push($: EngineInterface, branch: string | undefined): Promise<Outcome> {
   const pushed = branch ?? (await currentBranch($))
   let result = branch ? await git($, 'push', 'origin', branch) : await git($, 'push')
   if (result.exitCode !== 0 && /no upstream|set-upstream/.test(result.stderr)) result = await git($, 'push', '-u', 'origin', 'HEAD')
@@ -180,13 +179,13 @@ const push = async ($: EngineInterface, branch: string | undefined): Promise<Out
   return { summary: `pushed. ${pushed}` }
 }
 
-const test = async ($: EngineInterface, command: string): Promise<Outcome> => {
+async function test($: EngineInterface, command: string): Promise<Outcome> {
   const result = await shell($, command, TEST_TIMEOUT_MS)
   if (result.exitCode !== 0) return { handoff: `\`${command}\` failed (exit ${result.exitCode}):\n${tail(result.stdout + result.stderr)}` }
   return { summary: `tests passed. (\`${command}\`)` }
 }
 
-const waitForServer = async ($: EngineInterface, pid: string, logPath: string) => {
+async function waitForServer($: EngineInterface, pid: string, logPath: string) {
   const deadline = (await $.clock.now()) + RUN_WAIT_MS
   let log = ''
   while ((await $.clock.now()) < deadline) {
@@ -198,13 +197,13 @@ const waitForServer = async ($: EngineInterface, pid: string, logPath: string) =
 }
 
 const runKey = () => `run:${cwd}`
-const runningServer = async ($: EngineInterface) => {
+async function runningServer($: EngineInterface) {
   const previous = (await $.store.get(runKey())) as RunRecord | undefined
   return previous && (await isAlive($, previous.pid)) ? previous : undefined
 }
 
 // Only the server quickrun started is known; any other one is the main model's to find.
-const stop = async ($: EngineInterface): Promise<Outcome> => {
+async function stop($: EngineInterface): Promise<Outcome> {
   const server = await runningServer($)
   if (!server) return { handoff: 'quickrun has no running server it started for this project; find and stop the server.' }
   await $.process.run(['sh', '-c', KILL_TREE, 'quickrun', server.pid])
@@ -215,14 +214,14 @@ const stop = async ($: EngineInterface): Promise<Outcome> => {
   return { summary: `stopped. \`${server.command}\` (pid ${server.pid})` }
 }
 
-const pull = async ($: EngineInterface): Promise<Outcome> => {
+async function pull($: EngineInterface): Promise<Outcome> {
   const result = await git($, 'pull', '--ff-only')
   if (result.exitCode !== 0) return { handoff: `git pull --ff-only failed:\n${tail(result.stderr)}` }
   return { summary: /up to date/i.test(result.stdout) ? 'already up to date' : `pulled. ${await currentBranch($)}` }
 }
 
 // Started detached with output to a log file, so the server outlives this hook and a plugin reload.
-const run = async ($: EngineInterface, command: string): Promise<Outcome> => {
+async function run($: EngineInterface, command: string): Promise<Outcome> {
   const previous = await runningServer($)
   if (previous) {
     return { summary: `already running \`${previous.command}\` (pid ${previous.pid}${previous.url ? `, ${previous.url}` : ''}, log ${previous.logPath})` }
@@ -239,7 +238,7 @@ const run = async ($: EngineInterface, command: string): Promise<Outcome> => {
   return { summary: `started. \`${command}\` (pid ${pid}${url ? `, ${url}` : ''}, log ${logPath})` }
 }
 
-const releaseNotes = async ($: EngineInterface, model: string, tag: string, subjects: string[]) => {
+async function releaseNotes($: EngineInterface, model: string, tag: string, subjects: string[]) {
   const reply = await $.model.complete({
     model,
     effort: 'low',
@@ -252,13 +251,13 @@ const releaseNotes = async ($: EngineInterface, model: string, tag: string, subj
 }
 
 // Files whose own version field holds the current version, lockfiles left alone.
-const versionFiles = async ($: EngineInterface, current: string) => {
+async function versionFiles($: EngineInterface, current: string) {
   const escaped = current.replace(/\./g, '\\.')
   const found = await git($, 'grep', '-l', '-E', '-e', `"version"[[:space:]]*:[[:space:]]*"${escaped}"`, '-e', `^version[[:space:]]*=[[:space:]]*"${escaped}"`, '--', '*.json', '*.toml', ':!*lock*')
   return found.stdout.split('\n').filter(Boolean)
 }
 
-const bumpFiles = async ($: EngineInterface, files: string[], from: string, to: string) => {
+async function bumpFiles($: EngineInterface, files: string[], from: string, to: string) {
   const bumped: string[] = []
   for (const file of files) {
     const text = await $.fs.read(`${cwd}/${file}`)
@@ -271,7 +270,7 @@ const bumpFiles = async ($: EngineInterface, files: string[], from: string, to: 
 }
 
 // Version from the last tag and the commits since it; files bumped, release commit, annotated tag, pushed.
-const releaseVersion = async ($: EngineInterface, model: string): Promise<Outcome> => {
+async function releaseVersion($: EngineInterface, model: string): Promise<Outcome> {
   if ((await git($, 'status', '--porcelain')).stdout.trim()) return { handoff: 'the working tree has uncommitted changes; commit or stash them before releasing.' }
   const lastTag = (await git($, 'describe', '--tags', '--abbrev=0')).stdout.trim()
   const current = release.parseVersion(lastTag)
@@ -308,7 +307,7 @@ const releaseVersion = async ($: EngineInterface, model: string): Promise<Outcom
   return { summary: `released. ${done}, pushed with the tag` }
 }
 
-const deploy = async ($: EngineInterface, command: string): Promise<Outcome> => {
+async function deploy($: EngineInterface, command: string): Promise<Outcome> {
   const answer = await $.ui.ask(`Run deploy command \`${command}\`?`, ['Deploy', 'Cancel']).catch(() => 'Cancel')
   if (answer !== 'Deploy') return { summary: 'deploy cancelled.' }
   const result = await shell($, command, DEPLOY_TIMEOUT_MS)
@@ -318,7 +317,7 @@ const deploy = async ($: EngineInterface, command: string): Promise<Outcome> => 
 
 type Plan = { commitModel: string; mergedInto?: string; messageTimings: MessageTiming[] }
 
-const perform = async ($: EngineInterface, action: router.Action, plan: Plan): Promise<Outcome> => {
+async function perform($: EngineInterface, action: router.Action, plan: Plan): Promise<Outcome> {
   if (action === 'commit') return commit($, plan.commitModel, plan.messageTimings)
   if (action === 'merge') return merge($)
   if (action === 'push') return push($, plan.mergedInto)
@@ -344,87 +343,78 @@ const perform = async ($: EngineInterface, action: router.Action, plan: Plan): P
   return deploy($, command)
 }
 
-export const register: Register = (on, options) => {
-  const commitModel = String(options.commitModel)
+export async function report($: EngineInterface) { return statsReport((await $.store.get('stats')) as Stats | undefined) }
 
-  on('session.start', async ($, e, next) => {
-    cwd = e.cwd
-    sessionId = await $.session.id()
-    await $.command.register({ name: 'quickrun', description: 'Show what quickrun handled; `/quickrun off` or `on` switches it' })
-    return next(e)
-  })
+let commitModel = 'haiku'
 
-  on('command.run', { command: 'quickrun' }, async ($, e) => {
-    const word = e.args.trim().toLowerCase()
-    if (word === 'on' || word === 'off') {
-      await $.store.set(IS_OFF_KEY, word === 'off')
-      return { text: `quickrun is ${word}.` }
+export const configure = (options: Record<string, unknown>) => {
+  commitModel = String(options.commitModel ?? 'haiku')
+}
+
+export async function onSessionStart($: EngineInterface, e: any) {
+  cwd = e.cwd
+  sessionId = await $.session.id()
+}
+
+export async function onPrompt($: EngineInterface, e: any, next: any) {
+  const passOn = async (extra: string[] = []) => {
+    const notes = await takeNotes($)
+    const noteBlock = notes.length ? [`[quickrun] Since your last turn the user ran, without you: ${notes.join('; ')}`] : []
+    const context = [...(e.context ?? []), ...noteBlock, ...extra]
+    return next(context.length ? { ...e, context } : e)
+  }
+  if (e.command || e.isMeta || !HUMAN_ORIGINS.has(e.origin.kind)) return passOn()
+
+  const actions = router.route(e.text)
+  if (!actions) return passOn()
+
+  const done: string[] = []
+  doneThisPrompt = done
+  const plan: Plan = { commitModel, messageTimings: [] }
+  const announcement = `quickrun is running ${actions.join(' + ')} itself, without the model`
+  $.ui.toast(announcement)
+  $.ui.log(announcement)
+  for (const action of actions) {
+    $.ui.status(`quickrun: ${action}…`)
+    const outcome = await perform($, action, plan).catch(error => ({ handoff: `${action} threw: ${error}` }))
+    if ('handoff' in outcome) {
+      $.ui.status(undefined)
+      $.ui.log(`quickrun could not finish ${action}; handing your prompt to the model`)
+      const before = done.length ? `quickrun already did: ${done.join('; ')}. ` : ''
+      return passOn([`[quickrun] ${before}Then ${action} needs you. ${outcome.handoff}`])
     }
-    const isOff = (await $.store.get(IS_OFF_KEY)) === true
-    return { text: `${isOff ? 'quickrun is off (`/quickrun on` turns it back on).\n' : ''}${statsReport((await $.store.get('stats')) as Stats | undefined)}` }
-  })
+    if (outcome.mergedInto) plan.mergedInto = outcome.mergedInto
+    done.push(outcome.summary)
+  }
+  $.ui.status(undefined)
+  await addNotes($, done)
+  await recordStats($, actions, plan.messageTimings[0])
+  return { drop: `${DONE_PREFIX}${done.join(' · ')}` }
+}
 
-  on('prompt.submit', async ($, e, next) => {
-    const passOn = async (extra: string[] = []) => {
-      const notes = await takeNotes($)
-      const noteBlock = notes.length ? [`[quickrun] Since your last turn the user ran, without you: ${notes.join('; ')}`] : []
-      const context = [...(e.context ?? []), ...noteBlock, ...extra]
-      return next(context.length ? { ...e, context } : e)
-    }
-    if (e.command || e.isMeta || !HUMAN_ORIGINS.has(e.origin.kind)) return passOn()
-    if ((await $.store.get(IS_OFF_KEY)) === true) return passOn()
+// A hook that dies after running actions must not pass the prompt on, or the main model repeats them.
+export async function onPromptError($: EngineInterface, e: any, next: any) {
+  $.ui.status(undefined)
+  if (next.called || doneThisPrompt.length === 0) return next(e)
+  await addNotes($, doneThisPrompt)
+  return { drop: `${DONE_PREFIX}${doneThisPrompt.join(' · ')} (then stopped: hook timed out or failed)` }
+}
 
-    const actions = router.route(e.text)
-    if (!actions) return passOn()
-
-    const done: string[] = []
-    doneThisPrompt = done
-    const plan: Plan = { commitModel, messageTimings: [] }
-    const announcement = `quickrun is running ${actions.join(' + ')} itself, without the model`
-    $.ui.toast(announcement)
-    $.ui.log(announcement)
-    for (const action of actions) {
-      $.ui.status(`quickrun: ${action}…`)
-      const outcome = await perform($, action, plan).catch(error => ({ handoff: `${action} threw: ${error}` }))
-      if ('handoff' in outcome) {
-        $.ui.status(undefined)
-        $.ui.log(`quickrun could not finish ${action}; handing your prompt to the model`)
-        const before = done.length ? `quickrun already did: ${done.join('; ')}. ` : ''
-        return passOn([`[quickrun] ${before}Then ${action} needs you. ${outcome.handoff}`])
-      }
-      if (outcome.mergedInto) plan.mergedInto = outcome.mergedInto
-      done.push(outcome.summary)
-    }
-    $.ui.status(undefined)
-    await addNotes($, done)
-    await recordStats($, actions, plan.messageTimings[0])
-    return { drop: `${DONE_PREFIX}${done.join(' · ')}` }
-  }).catch(async ($, e, next) => {
-    // A hook that dies after running actions must not pass the prompt on, or the main model repeats them.
-    $.ui.status(undefined)
-    if (next.called || doneThisPrompt.length === 0) return next(e)
-    await addNotes($, doneThisPrompt)
-    return { drop: `${DONE_PREFIX}${doneThisPrompt.join(' · ')} (then stopped: hook timed out or failed)` }
-  })
-
-  on('tool.call', { tool: 'Bash' }, async ($, e, next) => {
-    const result = await next(e)
-    if (!learningAction || result.isError || ('deny' in result && result.deny)) return result
-    const command = project.learnable(learningAction, e.command, e.run_in_background === true)
-    if (command) {
-      await remember($, learningAction, command)
-      learningAction = undefined
-    }
-    return result
-  })
-
-  on('turn.complete', ($, e, next) => {
+export async function onBash($: EngineInterface, e: any, next: any) {
+  const result = await next(e)
+  if (!learningAction || result.isError || ('deny' in result && result.deny)) return result
+  const command = project.learnable(learningAction, e.command, e.run_in_background === true)
+  if (command) {
+    await remember($, learningAction, command)
     learningAction = undefined
-    return next(e)
-  })
+  }
+  return result
+}
 
-  on('session.end', async ($, e, next) => {
-    await $.store.delete(notesKey())
-    return next(e)
-  })
+export const onTurnComplete = () => {
+  learningAction = undefined
+}
+
+export async function onSessionEnd($: EngineInterface) {
+  await $.store.delete(notesKey())
 }

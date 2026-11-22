@@ -1,0 +1,56 @@
+{
+  "name": "token-saver",
+  "displayName": "Token Saver",
+  "version": "0.30.2",
+  "description": "Saves tokens: runs short git prompts without a model turn, trims wasteful Reads and repeat errors, offers a fresh start on unrelated tasks, and can keep the prompt cache warm. Each part has its own switch.",
+  "userConfig": {
+    "isQuickOn": {
+      "type": "boolean",
+      "title": "Run commit, merge, push and other short prompts without the model",
+      "default": true,
+      "description": "Commit, merge, push, pull, release, test, run, stop and deploy run directly when the prompt is only that command."
+    },
+    "isTrimOn": {
+      "type": "boolean",
+      "title": "Trim wasteful Reads, repeat errors and repeat Bash",
+      "default": true,
+      "description": "Blocks duplicate and missing-file Reads, caps big Reads, downscales large images, and warns on repeat errors and repeat Bash."
+    },
+    "isNudgeOn": {
+      "type": "boolean",
+      "title": "Offer a fresh start on an unrelated task in a big session",
+      "default": true,
+      "description": "Asks whether to start fresh or compact when a new, unrelated prompt arrives in a session over 150k tokens."
+    },
+    "isCacheKeeperOn": {
+      "type": "boolean",
+      "title": "Keep the prompt cache warm (each ping spends tokens)",
+      "default": false,
+      "description": "Sends a one-word ping when the session is idle, then compacts. Each ping spends tokens."
+    },
+    "commitModel": {
+      "type": "string",
+      "title": "Commit message model",
+      "description": "Alias or model id used through the session's own API client.",
+      "default": "haiku"
+    },
+    "intervalMinutes": {
+      "type": "number",
+      "title": "Idle minutes before each keep-alive step",
+      "description": "Cache TTL minus a margin: 55 for the 1-hour TTL, 4 for the 5-minute TTL.",
+      "default": 55
+    },
+    "maxPings": {
+      "type": "number",
+      "title": "Keep-alive pings before compacting",
+      "default": 2,
+      "description": "Pings sent while idle; the next idle step compacts."
+    },
+    "minTokens": {
+      "type": "number",
+      "title": "Minimum context tokens for the keep-alive",
+      "default": 150000,
+      "description": "Sessions smaller than this are left alone."
+    }
+  }
+}

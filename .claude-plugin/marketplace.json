@@ -13,19 +13,9 @@
       "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills."
     },
     {
-      "name": "token-guard",
-      "source": "./dist/claude/token-guard",
-      "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
-    },
-    {
-      "name": "cache-keeper",
-      "source": "./dist/claude/cache-keeper",
-      "description": "Keeps the prompt cache warm in long idle sessions with cheap pings, then compacts."
-    },
-    {
-      "name": "quickrun",
-      "source": "./dist/claude/quickrun",
-      "description": "Runs short command prompts (commit, push, run, test, deploy, typos included) directly, without a main-model turn."
+      "name": "token-saver",
+      "source": "./dist/claude/token-saver",
+      "description": "Saves tokens: runs short git prompts without a model turn, trims wasteful Reads and repeat errors, offers a fresh start on unrelated tasks, and can keep the prompt cache warm. Each part has its own switch."
     }
   ]
 }

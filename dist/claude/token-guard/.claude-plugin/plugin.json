@@ -1,5 +1,0 @@
-{
-  "name": "token-guard",
-  "version": "0.30.2",
-  "description": "Warns on long sessions and trims wasteful Reads and repeated Bash calls."
-}

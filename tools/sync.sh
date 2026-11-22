@@ -34,7 +34,7 @@ for plugin in core/claude/*/; do
   cp -R "$plugin" "$claude/$name"
   find "$claude/$name" -name '*.test.ts' -delete
 done
-rm -rf "$claude/quickrun/tools"
+rm -rf "$claude/token-saver/tools"
 
 cp -R core/context "$claude/obedient-ai/context"
 cp -R core/output-styles "$claude/obedient-ai/output-styles"

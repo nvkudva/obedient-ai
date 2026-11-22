@@ -1,6 +1,6 @@
 # obedient-ai
 
-A Claude Code plugin marketplace with four plugins, each switched on or off on its own with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, guard hooks for dangerous git, foreground sleeps and `pip install`, and the `polish`, `learn-logs`, `marketing` and `post` skills. `token-guard` warns before a session gets expensive and trims wasteful Reads. `cache-keeper` keeps the prompt cache warm in long idle sessions. `quickrun` runs short command prompts like `commit` or `run` without a main-model turn. They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
+A Claude Code plugin marketplace with two plugins, each switched on or off with `claude plugin disable <name>@obedient-ai` (and `enable`). `obedient-ai` injects standing rules into every session, an optional output style, guard hooks for dangerous git, foreground sleeps and `pip install`, and the `polish`, `learn-logs`, `marketing` and `post` skills. `token-saver` cuts token use with four parts, each with its own switch: `quick` runs short command prompts like `commit` or `run` without a main-model turn, `trim` stops wasteful Reads and repeat errors, `nudge` offers a fresh start on an unrelated task in a big session, and `cache` keeps the prompt cache warm (off by default, each ping spends tokens). They are for people who want Claude terse and cheap by default instead of repeating the same instructions each time.
 
 It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same text loads twice per session.
 
@@ -9,7 +9,7 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 - Claude Code, either the CLI or claude.ai cloud sessions
 - A POSIX shell on PATH, plus `jq` for the guard hooks. On Windows without one, the hooks do nothing
 - Git, if you install from a local clone
-- macOS is the tested platform: `export-scratch.sh` builds a `/private/tmp` path, and token-guard downscales images with `sips`
+- macOS is the tested platform: `export-scratch.sh` builds a `/private/tmp` path, and token-saver downscales images with `sips`
 - `tools/bootstrap.sh` is optional and does touch the network and your machine, see "Bootstrap script" below
 - No accounts or keys
 
@@ -18,12 +18,10 @@ It replaces keeping those rules in `~/.claude/CLAUDE.md`. Keep both and the same
 ```bash
 claude plugin marketplace add nvkudva/obedient-ai
 claude plugin install obedient-ai@obedient-ai
-claude plugin install token-guard@obedient-ai       # optional: cost warnings, trims wasteful reads
-claude plugin install cache-keeper@obedient-ai      # optional: keeps the prompt cache warm (each ping spends tokens)
-claude plugin install quickrun@obedient-ai      # optional: runs short command prompts without a model turn
+claude plugin install token-saver@obedient-ai      # optional: saves tokens (quick commands, trimmed reads, fresh-start nudge)
 ```
 
-The marketplace holds four separate plugins; installing one does not install the others. Turn one off without uninstalling: `claude plugin disable quickrun@obedient-ai`. Inside a session, `/quickrun off` and `/guard off` pause quickrun and token-guard (`on` resumes); the choice is stored. The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
+The marketplace holds two separate plugins; installing one does not install the other. Turn one off without uninstalling: `claude plugin disable token-saver@obedient-ai`. Inside a session, `/saver` shows what each part did, and `/saver off|on quick|trim|nudge|cache` switches one part; the choice is stored. The same four switches are plugin settings (`isQuickOn`, `isTrimOn`, `isNudgeOn`, `isCacheKeeperOn`). The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
 
 From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
 
@@ -75,18 +73,18 @@ The plugin also bundles four skills, each loaded lazily when its description mat
 
 ## Other agents
 
-| Agent | Rules | Skills | Guard hooks, cacheKeeper, token-guard |
+| Agent | Rules | Skills | Guard hooks, token-saver |
 |---|---|---|---|
 | Claude Code | yes | yes | yes |
-| Antigravity | yes, via `dist/antigravity/rules/AGENTS.md` (run `agy plugin install ./dist/antigravity`) | yes (`dist/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `cacheKeeper` & `token-guard` no |
+| Antigravity | yes, via `dist/antigravity/rules/AGENTS.md` (run `agy plugin install ./dist/antigravity`) | yes (`dist/antigravity/skills`, built from `core/skills`) | guard hooks yes (`PreToolUse` on `run_command`); `token-saver` no |
 | OpenCode | yes, via `dist/opencode/index.ts` (typed against `@opencode/plugin` 2.0.32; not run in a live session) | yes, same adapter | no |
 | pi | copy or symlink `dist/pi/APPEND_SYSTEM.md` to `~/.pi/agent/APPEND_SYSTEM.md` | `pi install <path-to-clone>` reads the `pi.skills` entry in `package.json` | no |
 
-Edit only `core/`. Run `./tools/sync.sh` after any change there: it rebuilds `dist/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `cacheKeeper.ts` and `token-guard` use Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
+Edit only `core/`. Run `./tools/sync.sh` after any change there: it rebuilds `dist/` (real files, not symlinks, because Claude Code copies a plugin to a cache and cannot follow links out of it). `tools/validate.sh` fails when they drift. `token-saver` uses Claude Code's `modules` / UI APIs and remain Claude-Code-only. In OpenCode and pi, the git, sleep and `pip` rules in `rules.md` are advice only.
 
-## token-guard
+## token-saver: trim and nudge
 
-A second plugin in this marketplace: a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-guard@obedient-ai`, or try it from a clone with `claude --plugin-dir dist/claude/token-guard`.
+Part of the `token-saver` plugin, a Claude Code mod that warns before a session gets expensive and trims wasteful calls. Install with `claude plugin install token-saver@obedient-ai`, or try it from a clone with `claude --plugin-dir dist/claude/token-saver`.
 
 - Status line shows context percent, cache time left, turns, calls and trimmed count; toasts at 150 turns and 300 calls (compact, or write a handoff and start fresh).
 - A new, unrelated prompt in a session over 150k tokens asks whether to continue, start fresh or compact first.
@@ -97,13 +95,17 @@ A second plugin in this marketplace: a Claude Code mod that warns before a sessi
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
 - The same tool error (digits ignored) three times in one turn appends a note to the third result telling the model to stop retrying and say what it tried. Once per turn, never blocks.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
-- `/guard` prints the counters and the transcripts folder size.
+- `/saver` prints the counters (kept across sessions) and the transcripts folder size.
 
-Thresholds are constants at the top of `token-guard/hooks/register.ts`. Counters reset when the mod reloads.
+Thresholds are constants at the top of `core/claude/token-saver/hooks/trim.ts`.
 
-## quickrun
+### cache
 
-A third plugin: short command prompts run directly, with no main-model turn. Install with `claude plugin install quickrun@obedient-ai`, or try it from a clone with `claude --plugin-dir dist/claude/quickrun`.
+After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens, so it is off until you set `isCacheKeeperOn`. `/saver` shows how many pings and compactions it made.
+
+## token-saver: quick
+
+Part of the `token-saver` plugin: short command prompts run directly, with no main-model turn.
 
 - Routes prompts of 6 words or fewer made only of command words and filler: `pull`, `commit`, `merge`, `push`, `release` (also `tag`, `bump`, `version`), `test`, `deploy`, `stop`, `restart`, `run` and combinations (`comit n psuh`, `commit push deploy`). Typos within one edit are matched. `prod` means deploy.
 - `run`, `stop` and `restart` need a target (`run dev`, `stop all servers`, `restart dev server`); a bare `run it` or `stop` goes to the main model, since in past sessions those rarely meant the dev server.
@@ -117,11 +119,11 @@ A third plugin: short command prompts run directly, with no main-model turn. Ins
 - `deploy` runs only the `deploy` command in `.claude/quickrun.json`, after a confirm.
 - A failed or unknown action hands the prompt to the main model with the error attached. When the main model then starts the server or runs the tests, that command is learned for the repo.
 - What ran is told to the main model on your next prompt, since a handled prompt never enters the conversation.
-- `/quickrun` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
+- `/saver` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun core/claude/quickrun/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
+`bun core/claude/token-saver/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
@@ -135,7 +137,7 @@ core/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
   claude/      one folder per Claude Code plugin: manifest, hooks, and for the mods their tests and tools
     obedient-ai/
-    quickrun/  token-guard/  cache-keeper/            Claude Code only
+    token-saver/     Claude Code only: hooks/{register,quick,trim,cache}.ts, tests, tools
   antigravity/ plugin.json, hooks.json
   opencode/    index.ts
 dist/            generated, never edit
