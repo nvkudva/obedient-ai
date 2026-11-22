@@ -4,20 +4,28 @@
   abstractions I didn't ask for. No adjacent refactors, no drive-by renames.
 - If you fail 3 times at the same problem, or keep repeating the same approach,
   stop and tell me what you tried.
+- If you're unsure what the code does, say so and ask — don't read 20 files to find out.
+- Big tasks (>5 files or long exploration): state the plan in under 10 lines, then
+  proceed. Wait for me only before destructive, irreversible, or outward-facing actions.
+- Before a deploy or any production step, ask me once, up front, for the whole sequence.
+  Then run it without further prompts.
 - Long jobs (builds, test suites, dev servers, waiting on a log): start them with
   `run_in_background` and wait with Monitor. Never poll in the foreground with
   `sleep`, `until` or `while` loops.
 - Delete directories with `trash <path>`. `rm -rf` only on absolute paths inside
   /tmp, the scratchpad or `$TMPDIR`. No rebase, amend or history rewrite unless I
   ask for it.
-- Be terse and answer first.
 
 ## Writing code
 
 - Edit, never rewrite. Use the smallest `old_string` that is still unique.
 - No comments unless the logic is genuinely non-obvious.
 - Run targeted tests — one file, one test — not the suite, unless I ask.
+- Run formatters and linters once at the end of an edit batch, not between edits.
 - `git diff --stat` first. Full diff only if I ask or something looks wrong.
+- Moves and bulk renames: `git mv`, then `sed` or `sg` for imports. Never retype a file.
+- Delete dead code in the same change: if an edit orphans an export or a comment,
+  remove it, confirmed with `rg`.
 
 ## Code style
 
@@ -36,11 +44,8 @@
   snake_case in Python). No `utils`, `misc`, `helpers` or `manager` names.
 - One pattern per problem (errors, API calls, config). Find the dominant existing one
   with `rg` and copy it. Never add a second way.
-- Delete dead code in the same change: if an edit orphans an export or a comment,
-  remove it, confirmed with `rg`.
-- Moves and bulk renames: `git mv`, then `sed` or `sg` for imports. Never retype a file.
 
-## Coding style (all languages)
+### Imports and calls (all languages)
 
 - Call local code through its owner: `<module|class>.<function>()`. The call site
   shows where the function lives.
@@ -58,7 +63,7 @@
 ## Reading and searching
 
 - Files under ~300 lines: read whole. Larger files: `rg -n` to locate, then read a
-  bounded range.
+  bounded range. Don't read the same file in full more than twice.
 - Never read in full: lock files, minified bundles, logs, build output, `node_modules`,
   generated code, large JSON/YAML. Query them with `rg`, `jq`, `yq`, `head`, `tail`.
 - Pipe noisy commands through filters: `npm test 2>&1 | tail -40`,
@@ -66,19 +71,30 @@
 - In auto mode, read files with Read and search with Grep, not `cat`, `sed -n` or
   `rg` in Bash: every Bash call outside the allowlist waits ~2.5 s for the classifier.
 - Never Read a guessed path. Locate it first with `rg --files | rg <name>` or `ls`.
+- `sg` (ast-grep) for structural search and multi-file refactors, `yq` for YAML/TOML,
+  `duckdb` for CSV/JSON/parquet/SQLite (not `sqlite3` one-liners), `uv pip install` or
+  `uv run --with <pkg>` instead of `pip install` (a hook blocks pip install).
+
+## Shell
+
+- Use absolute paths and `git -C <repo>` instead of a `cd` prefix; the shell resets cwd.
+- `$SCRATCH` holds this session's scratchpad path. Use it instead of pasting the long path.
+- A Python or SQL snippet you run twice goes into a file under the repo's `tools/` (or `$SCRATCH`), then run that file.
 - End exploratory chains (`ls a b; rg x`) with `; true` so a missing path or empty
   match does not mark the whole call failed.
 - Worktree-isolated session refusing a command: run it with `git -C <worktree>` or
   from the worktree root. Never retry the same refused command.
-- `sg` (ast-grep) for structural search and multi-file refactors, `yq` for YAML/TOML,
-  `duckdb` for CSV/JSON/parquet/SQLite, `uv pip install` or `uv run --with <pkg>`
-  instead of `pip install` (a hook blocks pip install).
 - Node package manager: follow the lockfile. `pnpm-lock.yaml` -> pnpm, `bun.lock` ->
   bun, `package-lock.json` -> npm. Never mix managers in one repo. New project with no
   lockfile: default to bun, fall back to pnpm if a dep needs full npm lifecycle scripts.
 
+## Git guardrails
+
+- `block-dangerous-git.sh` blocks these, so never try them: `reset --hard/--merge/--keep`, `checkout -f` and `switch -f` on a dirty tree, `restore --source`, `clean -f`, `rm -f`, `stash drop/clear`, any force or `--mirror`/`--delete` push, `filter-branch`/`filter-repo`, `rebase`, `pull --rebase`, `commit --amend`, `branch -d/-D`, `tag -d`, `update-ref -d`, `reflog expire`, `gc --prune=now`, `prune`, `worktree remove -f`, `gh repo delete/archive`, `gh release delete`. If one is truly needed, stop and ask me.
+
 ## Delegation (when I ask for subagents)
 
+- Delegate any search that needs more than 5 file reads to an `Explore` or `cavecrew-investigator` subagent, with a tool-call budget and a return contract. Use `general-purpose` only for work that writes files.
 - Every subagent prompt states a search budget and an explicit return contract, e.g.
   "Budget: 20 tool calls. Return only: root cause in one sentence and file:line.
   Do not paste logs, diffs, or file contents."
@@ -86,11 +102,6 @@
 - Subagents do not see these rules. Put task background and the key constraints
   (return contract; hooks still apply to them) in the prompt.
 - If a subagent returns nothing useful, tell me — don't silently redo its work.
-
-### Reporting subagent results
-
-Report at most: what changed, what broke, what's left. One line each.
-Findings I must act on go in a bulleted list, max one line per finding.
 
 ## Project memory: AGENTS.md, PLAN.md, TODO.md
 
@@ -124,31 +135,16 @@ Findings I must act on go in a bulleted list, max one line per finding.
 - Keep TODO items self-contained. Never write "per PLAN.md §3".
 - Archive or delete completed TODO items once the list passes ~50 lines.
 
-## Session hygiene
-
-- Big tasks (>5 files or long exploration): state the plan in under 10 lines, then
-  proceed. Wait for me only before destructive, irreversible, or outward-facing actions.
-- If you're unsure what the code does, say so and ask — don't read 20 files to find out.
-
 ## Efficiency
 
 - Screenshots are the biggest context cost. Read the page as text first (`read_page`, `get_page_text`, `find`, snapshot). Take a screenshot only to judge something visual.
 - Before you Read a local image, downscale it: `sips -Z 1200 in.png --out <scratchpad>/small.png`.
 - Every turn re-reads the whole session, so context size multiplies cost. When a task is done, or at about 150 responses, write a handoff with the `handoff` agent and tell me to `/clear`. Do not wait for auto-compaction.
 - Suggest Sonnet (`/model sonnet`) for routine edits, lookups and log reading; keep Opus for design and hard debugging.
-- Delegate any search that needs more than 5 file reads to an `Explore` or `cavecrew-investigator` subagent, with a tool-call budget and a return contract. Use `general-purpose` only for work that writes files.
 - Load deferred tools in one ToolSearch call: `select:a,b,c` with every tool the task needs.
-- Use absolute paths and `git -C <repo>` instead of a `cd` prefix; the shell resets cwd.
-- `$SCRATCH` holds this session's scratchpad path. Use it instead of pasting the long path.
-- A Python or SQL snippet you run twice goes into a file under the repo's `tools/` (or `$SCRATCH`), then run that file.
-- Query SQLite, CSV and JSON with `duckdb`, not `sqlite3` one-liners.
 
-## Guardrails and browser
+## Browser
 
-- `block-dangerous-git.sh` blocks these, so never try them: `reset --hard/--merge/--keep`, `checkout -f` and `switch -f` on a dirty tree, `restore --source`, `clean -f`, `rm -f`, `stash drop/clear`, any force or `--mirror`/`--delete` push, `filter-branch`/`filter-repo`, `rebase`, `pull --rebase`, `commit --amend`, `branch -d/-D`, `tag -d`, `update-ref -d`, `reflog expire`, `gc --prune=now`, `prune`, `worktree remove -f`, `gh repo delete/archive`, `gh release delete`. If one is truly needed, stop and ask me.
-- Before a deploy or any production step, ask me once, up front, for the whole sequence. Then run it without further prompts.
 - Keep browser JS evals short (under ~5 s). Split long work, and never await slow network calls inside an eval.
 - Use the dev-server port named in the project's AGENTS.md. If none is named, pick a free port, then record it there.
 - Take a screenshot before any coordinate click. Prefer `find`/`read_page` refs over coordinates.
-- Don't read the same file in full more than twice. Use `rg -n` and a bounded range instead.
-- Run formatters and linters once at the end of an edit batch, not between edits.

@@ -4,7 +4,7 @@ description: Short numbered bullets in simple words, with a superscript number o
 keep-coding-instructions: true
 ---
 
-Reply in short bullets, in simple words. Summarize command output; show it in full when a command fails or I ask. If you repeat a script, save it as a reusable script instead of rewriting it.
+Be terse and answer first. Reply in short bullets, in simple words. Summarize command output; show it in full when a command fails or I ask.
 
 When explaining a flow, use one numbered step per bullet.
 When you need a decision from me, ask with the AskUserQuestion tool so I can click an option. Do not print the options as text. My click is my answer: act on it at once, without asking again. Put the recommended option first and mark it "(Recommended)". Only if no question tool exists, give lettered options as text.
@@ -33,6 +33,7 @@ Structure:
 - Bold only labels and the one risky phrase. Backticks only for text I would copy or search.
 - Show each location once. No duplicate text or links.
 - Reply over 15 lines: open with a one-line summary and offer detail on request.
+- Subagent results: at most what changed, what broke, what's left, one line each. Findings I must act on go in a bulleted list, one line per finding.
 
 When a change is done, add two lines before "Not checked":
 - **State:** committed (hash), pushed or not, deployed or not.

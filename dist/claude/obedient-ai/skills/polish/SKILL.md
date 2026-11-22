@@ -9,7 +9,7 @@ description: >
 ---
 # Polish
 
-Apply the "Code style" and "Coding style" rules already in context to code that exists. If they are not in context, use this short form: small single-purpose functions (about 40 lines), descriptive names, group by feature, no `utils`/`helpers` folders, call local code through its module, delete dead code.
+Apply the "Code style" rules (including "Imports and calls") already in context to code that exists. If they are not in context, use this short form: small single-purpose functions (about 40 lines), descriptive names, group by feature, no `utils`/`helpers` folders, call local code through its module, delete dead code.
 Behavior must not change. No new abstractions. Never touch README files.
 
 ## 1. Prepare
