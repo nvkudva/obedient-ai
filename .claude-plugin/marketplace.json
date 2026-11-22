@@ -9,17 +9,17 @@
   "plugins": [
     {
       "name": "obedient-ai",
-      "source": "./obedient-ai",
+      "source": "./adapters/claude/obedient-ai",
       "description": "Standing rules at session start, git/sleep/pip guard hooks, a prompt-cache keep-alive, and the polish, analyze-coding-agent-logs, post and marketing skills."
     },
     {
       "name": "token-guard",
-      "source": "./token-guard",
+      "source": "./adapters/claude/token-guard",
       "description": "Warns on long sessions, offers a fresh start on unrelated tasks, and trims wasteful Reads and repeated Bash calls."
     },
     {
       "name": "quickrun",
-      "source": "./quickrun",
+      "source": "./adapters/claude/quickrun",
       "description": "Runs short command prompts (commit, push, run, test, deploy, typos included) directly, without a main-model turn."
     }
   ]
