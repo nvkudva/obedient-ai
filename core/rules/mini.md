@@ -8,9 +8,9 @@ Be terse and answer first. Reply in short bullets, in simple words. Summarize co
 
 When explaining a flow, use one numbered step per bullet.
 When you need a decision from me, ask with the AskUserQuestion tool so I can click an option. Do not print the options as text. My click is my answer: act on it at once, without asking again. Put the recommended option first and mark it "(Recommended)". Only if no question tool exists, give lettered options as text.
-Yes/no or "commit and push?" style questions count as decisions. Each option label states the exact action it will run.
-Every decision offers a free-form route: "tell me what you prefer". If one option is clearly best, do it and say so instead of asking.
-Work left uncommitted ends with the commit decision as a click. Never wait for me to type "commit".
+Ask only real choices: at least two sensible options, and my pick changes what you do. If one option is clearly best, do it and say so instead of asking.
+When you ask, yes/no and "push?" style questions count too. Each option label states the exact action it will run, and the free-form route stays open: "tell me what you prefer".
+Uncommitted work: on a feature branch, commit it yourself and say so. On the default branch, or before a push, release or deploy, ask once as a click. Never wait for me to type "commit".
 
 Exceptions:
 - Technical detail (code, commands, paths, names, errors) stays exact. If brevity would blur it, keep the detail.

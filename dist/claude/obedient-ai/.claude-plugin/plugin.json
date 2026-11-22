@@ -1,7 +1,7 @@
 {
   "name": "obedient-ai",
   "displayName": "Obedient AI",
-  "version": "0.40.1",
+  "version": "0.40.2",
   "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills.",
   "author": {
     "name": "nvkudva"
