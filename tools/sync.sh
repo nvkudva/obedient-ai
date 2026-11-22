@@ -27,9 +27,9 @@ copy_guards() {
 rm -rf dist
 mkdir -p dist/claude dist/antigravity dist/opencode dist/pi
 
-# Claude Code: one folder per plugin, starting from its skeleton in core/claude.
+# Claude Code: one folder per plugin, from the skeletons in core/cli-config/claude and the mods in core/mods.
 claude=dist/claude
-for plugin in core/claude/*/; do
+for plugin in core/cli-config/claude/*/ core/mods/*/; do
   name=$(basename "$plugin")
   cp -R "$plugin" "$claude/$name"
   find "$claude/$name" -name '*.test.ts' -delete
@@ -43,7 +43,7 @@ copy_guards "$claude/obedient-ai/hooks"
 
 # Antigravity
 agy=dist/antigravity
-cp core/antigravity/plugin.json core/antigravity/hooks.json "$agy/"
+cp core/cli-config/antigravity/plugin.json core/cli-config/antigravity/hooks.json "$agy/"
 cp -R core/skills "$agy/skills"
 copy_guards "$agy/hooks"
 mkdir -p "$agy/rules"
@@ -57,7 +57,7 @@ mkdir -p "$agy/rules"
 } > "$agy/rules/AGENTS.md"
 
 # OpenCode reads core/ at run time; pi installs skills from core/skills via package.json.
-cp core/opencode/index.ts dist/opencode/index.ts
+cp core/cli-config/opencode/index.ts dist/opencode/index.ts
 {
   printf '%s\n\n' "$header"
   strip_frontmatter core/context/rules.md

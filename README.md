@@ -38,7 +38,7 @@ Start a new session and run `/plugin` or `claude plugin list`; obedient-ai shoul
 
 ## How it works
 
-`core/claude/obedient-ai/hooks/hooks.json` registers these hooks:
+`core/cli-config/claude/obedient-ai/hooks/hooks.json` registers these hooks:
 
 - `SessionStart`: asserts `${CLAUDE_PLUGIN_ROOT}/context/rules.md` is non-empty, then `cat`s it into the session context. A missing or empty file prints its path and exits 2, so a broken install fails loudly instead of starting a rule-free session.
 - `SessionStart`: `hooks/export-scratch.sh` exports `$SCRATCH` (the session scratchpad path) and puts GNU `sed` and `timeout` first on PATH when Homebrew has them.
@@ -97,7 +97,7 @@ Part of the `token-saver` plugin, a Claude Code mod that warns before a session 
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
 - `/saver` prints the counters (kept across sessions) and the transcripts folder size.
 
-Thresholds are constants at the top of `core/claude/token-saver/hooks/trim.ts`.
+Thresholds are constants at the top of `core/mods/token-saver/hooks/trim.ts`.
 
 ### cache
 
@@ -123,7 +123,7 @@ Part of the `token-saver` plugin: short command prompts run directly, with no ma
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 
-`bun core/claude/token-saver/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
+`bun core/mods/token-saver/tools/history.ts eval` replays your transcripts and lists which past prompts would have been routed, with how often the main model did the same; `misses` lists the ones where it did something else; `seed` writes the run and test commands the main model used per repo to `~/.claude/quickrun/learned.json`.
 
 ## Layout
 
@@ -135,11 +135,12 @@ core/
   output-styles/mini.md
   skills/{post,marketing,polish,learn-logs}/
   guards/{_common,block-dangerous-git,block-sleep,prefer-fast-tools}.sh
-  claude/      one folder per Claude Code plugin: manifest, hooks, and for the mods their tests and tools
-    obedient-ai/
-    token-saver/     Claude Code only: hooks/{register,quick,trim,cache}.ts, tests, tools
-  antigravity/ plugin.json, hooks.json
-  opencode/    index.ts
+  cli-config/  per-agent files that are not shared: manifests, hook wiring, adapters
+    claude/obedient-ai/   plugin.json, hooks/{hooks.json,export-scratch.sh}
+    antigravity/          plugin.json, hooks.json
+    opencode/             index.ts
+  mods/
+    token-saver/          Claude Code only: hooks/{register,quick,trim,cache}.ts, tests, tools
 dist/            generated, never edit
   claude/<plugin>/   what the marketplace installs (skills, rules and guard scripts copied in; tests left out)
   antigravity/  opencode/  pi/
@@ -147,7 +148,7 @@ tools/{sync,validate,bootstrap,plugin-usage}.sh, tools/claude-settings.json
 .claude-plugin/marketplace.json
 ```
 
-Adding an agent: one folder under `core/`, one block in `tools/sync.sh`, one row in the table above.
+Adding an agent: one folder under `core/cli-config/`, one block in `tools/sync.sh`, one row in the table above.
 
 ## Status
 
