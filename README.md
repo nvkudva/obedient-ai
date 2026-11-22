@@ -21,7 +21,7 @@ claude plugin install obedient-ai@obedient-ai
 claude plugin install token-saver@obedient-ai      # optional: saves tokens (quick commands, trimmed reads, fresh-start nudge)
 ```
 
-The marketplace holds two separate plugins; installing one does not install the other. Turn one off without uninstalling: `claude plugin disable token-saver@obedient-ai`. Inside a session, `/saver` shows what each part did, and `/saver off|on quick|trim|nudge|cache` switches one part; the choice is stored. The same four switches are plugin settings (`isQuickOn`, `isTrimOn`, `isNudgeOn`, `isCacheKeeperOn`). The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
+The marketplace holds two separate plugins; installing one does not install the other. Turn one off without uninstalling: `claude plugin disable token-saver@obedient-ai`. Inside a session, `/token-saver` shows what each part did, and `/token-saver off|on quick|trim|nudge|cache|all` switches one part or all of them; the choice is stored. The same four switches are plugin settings (`isQuickOn`, `isTrimOn`, `isNudgeOn`, `isCacheKeeperOn`). The Homebrew tools and settings merge come only from running `tools/bootstrap.sh` yourself.
 
 From inside a session use `/plugin marketplace add nvkudva/obedient-ai` then `/plugin install obedient-ai@obedient-ai`.
 
@@ -95,13 +95,13 @@ Part of the `token-saver` plugin, a Claude Code mod that warns before a session 
 - `Read` of a file over 600 lines with no `offset` or `limit` is capped at 400 lines.
 - The same tool error (digits ignored) three times in one turn appends a note to the third result telling the model to stop retrying and say what it tried. Once per turn, never blocks.
 - `Bash` repeats and inline `python3 - <<` patch helpers raise a toast only; nothing is blocked.
-- `/saver` prints the counters (kept across sessions) and the transcripts folder size.
+- `/token-saver` prints the counters (kept across sessions) and the transcripts folder size.
 
 Thresholds are constants at the top of `core/mods/token-saver/hooks/trim.ts`.
 
 ### cache
 
-After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens, so it is off until you set `isCacheKeeperOn`. `/saver` shows how many pings and compactions it made.
+After `intervalMinutes` idle (default 55, for the 1-hour cache TTL) in a session over `minTokens` (150000) it sends a one-word ping up to `maxPings` times (2), then compacts. Each ping spends tokens, so it is off until you set `isCacheKeeperOn`. `/token-saver` shows how many pings and compactions it made.
 
 ## token-saver: quick
 
@@ -119,7 +119,7 @@ Part of the `token-saver` plugin: short command prompts run directly, with no ma
 - `deploy` runs only the `deploy` command in `.claude/quickrun.json`, after a confirm.
 - A failed or unknown action hands the prompt to the main model with the error attached. When the main model then starts the server or runs the tests, that command is learned for the repo.
 - What ran is told to the main model on your next prompt, since a handled prompt never enters the conversation.
-- `/saver` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
+- `/token-saver` shows the prompts handled and the main-model turns they replaced, priced at your past per-action averages.
 
 Project config, all optional: `.claude/quickrun.json` with `{ "run": "bun run dev", "test": "bun test", "deploy": "./deploy.sh" }`.
 

@@ -122,22 +122,31 @@ test('release bumps, commits, tags with notes and pushes branch and tag', async 
   expect(handled.drop).toBe('token-saver: released. v0.27.0 (minor, bumped package.json), pushed with the tag')
 })
 
-test('/saver reports handled prompts and estimated savings', async ($, on) => {
+test('/token-saver reports handled prompts and estimated savings', async ($, on) => {
   const { submit } = await setup($, on)
   await submit('commit')
-  const report = await ($ as any).command.run({ command: 'saver', args: '' })
+  const report = await ($ as any).command.run({ command: 'token-saver', args: '' })
   expect(report.text).toContain('token-saver handled 1 prompts (commit 1)')
   expect(report.text).toContain('~$0.72')
   expect(report.text).toContain('haiku 0 ms (1)')
 })
 
-test('/saver off quick sends command prompts to the model, /saver on quick restores routing', async ($, on) => {
+test('/token-saver off quick sends command prompts to the model, /token-saver on quick restores routing', async ($, on) => {
   const { submit } = await setup($, on)
-  const run = (args: string) => ($ as any).command.run({ command: 'saver', args })
+  const run = (args: string) => ($ as any).command.run({ command: 'token-saver', args })
   expect((await run('off quick')).text).toBe('quick is off.')
   expect((await submit('commit')).drop).toBeUndefined()
   expect((await run('')).text).toContain('quick off')
   expect((await run('on quick')).text).toBe('quick is on.')
   expect((await submit('commit')).drop).toContain('committed')
-  expect((await run('off nothing')).text).toContain('usage: /saver off')
+  expect((await run('off nothing')).text).toContain('usage: /token-saver off')
+})
+
+test('/token-saver off all switches every part off, on all switches them back', async ($, on) => {
+  const { submit } = await setup($, on)
+  const run = (args: string) => ($ as any).command.run({ command: 'token-saver', args })
+  expect((await run('off all')).text).toBe('quick off · trim off · nudge off · cache off')
+  expect((await submit('commit')).drop).toBeUndefined()
+  expect((await run('on all')).text).toBe('quick on · trim on · nudge on · cache off')
+  expect((await submit('commit')).drop).toContain('committed')
 })

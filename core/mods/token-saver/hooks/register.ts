@@ -24,22 +24,28 @@ const isOn = (feature: Feature) => isEnabledByConfig[feature] && !disabledAtRunt
 const isOptionOn = (value: unknown, fallback: boolean) => (value === undefined ? fallback : String(value) !== 'false')
 const done = (event: unknown) => event
 
+// A part switched off in plugin settings stays off after `on all`; this shows that.
+const featureStates = () => FEATURES.map(feature => `${feature} ${isOn(feature) ? 'on' : 'off'}`).join(' · ')
+
 const saverText = async ($: EngineInterface, args: string) => {
   const [word, name] = args.trim().toLowerCase().split(/\s+/)
   if (word === 'on' || word === 'off') {
-    if (!FEATURES.includes(name as Feature)) return `usage: /saver ${word} <${FEATURES.join('|')}>`
-    if (word === 'off') disabledAtRuntime.add(name!)
-    else disabledAtRuntime.delete(name!)
+    const isAll = name === 'all'
+    if (!isAll && !FEATURES.includes(name as Feature)) return `usage: /token-saver ${word} <${FEATURES.join('|')}|all>`
+    for (const feature of isAll ? FEATURES : [name!]) {
+      if (word === 'off') disabledAtRuntime.add(feature)
+      else disabledAtRuntime.delete(feature)
+    }
     await $.store.set(DISABLED_KEY, [...disabledAtRuntime])
-    return `${name} is ${word}.`
+    return isAll ? featureStates() : `${name} is ${word}.`
   }
-  const state = FEATURES.map(feature => `${feature} ${isOn(feature) ? 'on' : 'off'}`).join(' · ')
+  const state = featureStates()
   return [state, await quickReport($), await trimReport($), await cacheReport($)].join('\n')
 }
 
 const startAll = async ($: EngineInterface, e: any) => {
   disabledAtRuntime = new Set(((await $.store.get(DISABLED_KEY)) as string[] | undefined) ?? [])
-  await $.command.register({ name: 'saver', description: 'Show what token-saver did; `/saver off|on <feature>` switches one of quick, trim, nudge, cache' })
+  await $.command.register({ name: 'token-saver', description: 'Show what token-saver did; `/token-saver off|on <feature|all>` switches quick, trim, nudge, cache or all of them' })
   if (isOn('quick')) await quickStart($, e)
   if (isOn('trim')) await trimStart($, e, done)
   if (isOn('cache')) await cacheStart($)
@@ -79,7 +85,7 @@ export const register: Register = (on, options) => {
     return next(e)
   })
 
-  on('command.run', { command: 'saver' }, async ($, e) => ({ text: await saverText($, e.args) }))
+  on('command.run', { command: 'token-saver' }, async ($, e) => ({ text: await saverText($, e.args) }))
 
   on('prompt.submit', ($, e, next) => promptAll($, e, next)).catch(($, e, next) =>
     isOn('quick') ? quickPromptError($, e, next) : next(e),

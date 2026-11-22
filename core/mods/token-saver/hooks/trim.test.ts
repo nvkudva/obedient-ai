@@ -31,7 +31,7 @@ test('the third identical failure in a turn gets a stop note, once', async ($, o
 })
 
 
-test('/saver off trim stops the stop note, /saver on trim restores it', async ($, on) => {
+test('/token-saver off trim stops the stop note, /token-saver on trim restores it', async ($, on) => {
   on('session.start', (_, e) => ({ cwd: e.cwd }))
   on('turn.start', (_, e) => ({ turnId: e.turnId }))
   on('clock.now', () => ({ value: 0 }))
@@ -45,7 +45,7 @@ test('/saver off trim stops the stop note, /saver on trim restores it', async ($
   on('tool.call', () => ({ isError: true, result: undefined, text: 'Exit code 1\nboom 7' }))
   await $.session.start({ cwd: '/', surface: 'terminal', isInteractive: true })
 
-  const run = (args: string) => ($ as any).command.run({ command: 'saver', args })
+  const run = (args: string) => ($ as any).command.run({ command: 'token-saver', args })
   const noteCount = async (turnId: string) => {
     await $.turn.start({ text: 'go', turnId })
     let notes = 0
