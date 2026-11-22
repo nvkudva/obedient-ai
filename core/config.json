@@ -1,6 +1,6 @@
 {
   "name": "obedient-ai",
-  "version": "0.40.2",
+  "version": "0.41.0",
   "repository": "https://github.com/nvkudva/obedient-ai",
   "displayName": "Obedient AI",
   "description": "Loads standing rules at session start, guards against dangerous git, foreground sleeps and pip install, and ships the polish, learn-logs, marketing and post skills.",

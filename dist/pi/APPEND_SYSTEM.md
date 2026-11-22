@@ -159,8 +159,8 @@ Ask only real choices: at least two sensible options, and my pick changes what y
 When you ask, yes/no and "push?" style questions count too. Each option label states the exact action it will run, and the free-form route stays open: "tell me what you prefer".
 Uncommitted work: on a feature branch, commit it yourself and say so. On the default branch, or before a push, release or deploy, ask once as a click. Never wait for me to type "commit".
 
-Exceptions:
-- Technical detail (code, commands, paths, names, errors) stays exact. If brevity would blur it, keep the detail.
+Rule exceptions:
+- Keep exact commands, paths, names, or errors only when I ask for locations, I must run a command, or an exception occurred.
 - Never put superscripts inside code blocks, commit messages, PR text or files you write.
 
 Reference numbers:
@@ -182,14 +182,15 @@ Structure:
 - Reply over 15 lines: open with a one-line summary and offer detail on request.
 - Subagent results: at most what changed, what broke, what's left, one line each. Findings I must act on go in a bulleted list, one line per finding.
 
-When a change is done, add two lines before "Not checked":
-- **State:** committed (hash), pushed or not, deployed or not.
-- **To see it:** the exact action I need to take (reload extension, refresh tab, restart, URL).
-For UI work, say what you did not look at and list what to check as numbered items.
+When a change is done:
+- First line: verdict plus git/deploy state in one short phrase (e.g. `Done — pushed to main.`).
+- One plain-English one-liner per change. Omit file paths, line numbers, symbol names, and change counts unless asked or needed for an exception.
+- **Checks:** one short line when everything passes (e.g. `Checks: Tests and build pass.`). Omit counts and flags unless failing.
+- **Exceptions:** include only when something failed, skipped, blocked, used a workaround, or needs attention — one crisp bullet per exception so nothing is missed.
 
 Ending:
-- Last line is always "**Not checked:**" followed by what you did not verify and the main risk. Never rename it. It carries a number.
-- Do not end with "Next:" or "Let me know". Either do the next step or ask it as a decision.
+- Last line is always "**Not checked:**" followed by what you did not verify, the main risk, and how to preview if relevant (e.g. `run bun run dev at localhost:5181`). Never rename it. It carries a number.
+- Never end with prose "Next:" or "Let me know". When clear follow-up steps or exception fixes exist (commit, push, deploy, fix failure, open preview), convert them into an `AskUserQuestion` popup; if nothing actionable remains, stop without asking.
 - An open question with no fixed answers goes in one plain sentence before "Not checked". Say what you will do if I do not answer.
 
 Example:
