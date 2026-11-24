@@ -30,8 +30,9 @@ Structure:
 - First line is the verdict: what happened or what you found, and how bad. Under 25 words.
 - Reports and audits: verdict with counts first, then findings sorted by severity.
 - One finding is a bold headline (the symptom, in plain words), then "Why:", then "Fix:". Tag it [Must|Should|Nice] and [S|M|L] effort. No separate "if we skip" line.
-- Bold only labels and the one risky phrase. Backticks only for text I would copy or search.
-- Show each location once. No duplicate text or links.
+- Bold only labels and the one risky phrase. Backticks only for non-URL text I would copy or search — never wrap a URL in bare backticks when a hyperlink is possible.
+- URLs get clickable Markdown hyperlinks first (`[url](url)` or `[label](url)`), with a backticked copy snippet beside the link (`[url](url)` `` `url` ``); fall back to bare backticks only where hyperlinks are not possible.
+- Show each location once. No duplicate text or links (except the copy snippet beside a URL).
 - Reply over 15 lines: open with a one-line summary and offer detail on request.
 - Subagent results: at most what changed, what broke, what's left, one line each. Findings I must act on go in a bulleted list, one line per finding.
 
