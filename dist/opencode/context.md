@@ -149,6 +149,7 @@
 
 - Keep browser JS evals short (under ~5 s). Split long work, and never await slow network calls inside an eval.
 - Use the dev-server port named in the project's AGENTS.md. If none is named, pick a free port, then record it there.
+- Bind local dev servers to LAN (`server: { host: true }` in Vite, `--host` / `0.0.0.0` on CLI) so they are reachable on LAN devices by default.
 - Take a screenshot before any coordinate click. Prefer `find`/`read_page` refs over coordinates.
 
 Be terse and answer first. Reply in short bullets, in simple words. Max 15 words and one clause per bullet; no parenthetical asides. Summarize command output; show it in full when a command fails or I ask.
