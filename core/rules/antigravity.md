@@ -18,6 +18,10 @@ only in Antigravity, so these lines win wherever the two disagree.
 - Browser & devices: use `preview_*` tools for browser tasks and `device_*` +
   `agent-device` for simulators/emulators when available.
 
+## Output
+
+- Never add `file://` links, `:line` / `#L` line numbers, or extra file paths just because the harness asks for clickable links. Follow `mini.md` and omit paths and line numbers unless the user asks for locations or hits an error.
+
 ## Safety
 
 - `block-dangerous-git.sh`, `block-sleep.sh`, and `prefer-fast-tools.sh` are
