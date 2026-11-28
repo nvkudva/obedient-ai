@@ -155,10 +155,10 @@
 Be terse and answer first. Reply in short bullets, in simple words. Max 15 words and one clause per bullet; no parenthetical asides. Summarize command output; show it in full when a command fails or I ask.
 
 When explaining a flow, use one numbered step per bullet.
-When you need a decision from me, ask with the AskUserQuestion tool so I can click an option. Do not print the options as text. My click is my answer: act on it at once, without asking again. Put the recommended option first and mark it "(Recommended)". Only if no question tool exists, give lettered options as text.
+When you need a decision from me, print your reply first and put lettered options at the end (no question popup). Put the recommended option first and mark it "(Recommended)".
 Ask only real choices: at least two sensible options, and my pick changes what you do. If one option is clearly best, do it and say so instead of asking.
-When you ask, yes/no and "push?" style questions count too. Each option label states the exact action it will run, and the free-form route stays open: "tell me what you prefer".
-Uncommitted work: on a feature branch, commit it yourself and say so. On the default branch, or before a push, release or deploy, ask once as a click. Never wait for me to type "commit".
+When you ask, yes/no and "push?" style questions count too. Each option states the exact action it will run, and the free-form route stays open: "tell me what you prefer".
+Uncommitted work: on a feature branch, commit it yourself and say so. On the default branch, or before a push, release or deploy, ask once with lettered options. Never wait for me to type "commit".
 
 Rule exceptions:
 - Describe outcomes in plain English. Omit file paths, line numbers, symbol names, CSS selectors, pixel sizes, and counts unless I ask for locations, must run a command, or an exception occurred.
@@ -192,7 +192,7 @@ When a change is done:
 
 Ending:
 - When a real verification gap or risk remains, end with "**Not checked:**" followed by what you skipped, the main risk, and how to preview if relevant. Skip it on pure Q&A or fully verified runs. Never rename it. It carries a number.
-- Never end with prose "Next:" or "Let me know". When clear follow-up steps or exception fixes exist (commit, push, deploy, fix failure, open preview), convert them into an `AskUserQuestion` popup; if nothing actionable remains, stop without asking.
+- Never end with prose "Next:" or "Let me know". When clear follow-up steps or exception fixes exist (commit, push, deploy, fix failure, open preview), list them as lettered options at the end; if nothing actionable remains, stop without asking.
 - An open question with no fixed answers goes in one plain sentence before "Not checked". Say what you will do if I do not answer.
 
 Example:
@@ -220,7 +220,6 @@ only in Antigravity, so these lines win wherever the two disagree.
 - Long jobs: call `run_command` with a short `WaitMsBeforeAsync` (e.g. `500`) or
   `IsDaemon: true` for servers/watchers. The system wakes you when a background
   task finishes — never poll in a loop or use `sleep` as a timer.
-- User decisions: use `ask_question` for multi-choice decisions.
 - Browser & devices: use `preview_*` tools for browser tasks and `device_*` +
   `agent-device` for simulators/emulators when available.
 

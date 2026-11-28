@@ -14,7 +14,6 @@ only in Antigravity, so these lines win wherever the two disagree.
 - Long jobs: call `run_command` with a short `WaitMsBeforeAsync` (e.g. `500`) or
   `IsDaemon: true` for servers/watchers. The system wakes you when a background
   task finishes — never poll in a loop or use `sleep` as a timer.
-- User decisions: use `ask_question` for multi-choice decisions.
 - Browser & devices: use `preview_*` tools for browser tasks and `device_*` +
   `agent-device` for simulators/emulators when available.
 
